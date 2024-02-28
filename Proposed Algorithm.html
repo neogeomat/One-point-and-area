@@ -1,0 +1,180 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Proposed Algorithm</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" />
+
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            width: 100%;
+            top: 0;
+            bottom: 0;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="map"></div>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js"></script>
+    <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+    <script src="../qgis/polygon.geojson" type="text/javascript"></script>
+    <script src="utils.js"></script>
+    <script>
+
+        // create Leaflet map, centered on Texas
+        var map = L.map('map', {
+            // zoomSnap: .1,
+            // center: [-84.46,37.98],
+            center: [35,0],
+            zoom: 2,
+            // crs: L.CRS.EPSG3857,
+            crs: L.CRS.Simple
+        });
+        
+        let polygon = L.geoJSON(polygonLayer).addTo(map);
+        
+        // debugger;
+        const labelLayer = L.featureGroup().addTo(map);
+        // add labels to each vertex of the polygon
+        polygon.getLayers()[0].getLatLngs()[0].forEach((latLng, index) => {
+            const label = L.tooltip({
+                direction: 'auto',
+            })
+            .setLatLng(latLng)
+            .setContent(`<span>${index}</span>`)
+            // .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
+            .addTo(labelLayer);
+        // Apply styling to label if needed
+        });
+
+        let points = polygonLayer.features[0].geometry.coordinates[0];
+        console.log('points: ', points);
+        // points.pop(); // remove last point to avoid duplicating first point
+        
+        // find interior angles
+        let intAngles = getPolygonAngles(points);
+        console.log('intAngles: ', intAngles);
+        
+        let concaveIndex = [];
+        for (let i = 0; i < intAngles.length; i++) {
+            if (intAngles[i] > 180) {
+                concaveIndex.push(i);
+            }
+        }
+        console.log('concave index: ', concaveIndex);
+        
+        // parameters
+        const selectedPoint = points[0];
+        const requiredArea = 200;
+
+        // Proposed Algorithm
+        // find angles and sort on increasing order
+        let pointsSlopes = points.map((point, index) => {
+            return {
+                vertexindex: index,
+                angleXaxis: angleWithXAxis(points[0],point)
+            }
+        });
+        console.log('pointsSlopes: ', pointsSlopes);
+        let pointAngles = pointsSlopes.map(point =>  (point.angleXaxis - pointsSlopes[1].angleXaxis)>=0?(point.angleXaxis - pointsSlopes[1].angleXaxis):(point.angleXaxis - pointsSlopes[1].angleXaxis +360));
+        pointAngles[0] = 0; //set angle at origin as 0, previous calculations have altered it 
+        console.log('pointAngles: ', pointAngles);
+        pointsSlopes.forEach((item, i) => { pointsSlopes[i].angle = pointAngles[i]; });
+        pointsSlopes.sort((a, b) => a.angle - b.angle);
+        
+        let pointsSlopesIndex = pointsSlopes.map((point, index) => {
+            return point.vertexindex;
+        });
+
+        let rearrangedPoints = pointsSlopesIndex.map(index => {
+            return points[index]; 
+        });
+        console.log('rearrangedPoints: ', rearrangedPoints);
+        // find the largest polygon with area less than required area
+        let areas = [];
+        for(let i=1;i<rearrangedPoints.length;i++){
+            console.group('concave check',i);
+            // console.groupCollapsed('concave check',i);
+            console.log('i: ', i);
+            console.log('pointsSlopesIndex[i]: ', pointsSlopesIndex[i]);
+            let newPolygon = rearrangedPoints.slice(0,i+1);
+            console.log('newPolygon: ', newPolygon);
+            L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {color: 'green'}).addTo(map);
+            const concaveYes = concaveIndex.some(value => {
+                return value <= pointsSlopesIndex[i]                    
+            });
+            console.log('concaveYes: ', concaveYes);
+            const concaveAt = concaveIndex.filter(value => {
+                return value <= pointsSlopesIndex[i]
+            })
+            console.log('concaveAt: ', concaveAt);
+            
+            if(concaveYes){
+                const area = calcPolygonAreaShoelace(rearrangedPoints.slice(0,i+1));
+                console.log('area: ', area);
+                console.log('points[concaveAt[0]]: ', points[concaveAt[0]]);
+                console.log('rearrangedPoints[i-1]: ', rearrangedPoints[i-1]);
+                console.log('rearrangedPoints[i]: ', rearrangedPoints[i]);
+                const angleA = angleWithXAxis(rearrangedPoints[i-1], points[concaveAt[0]]) - angleWithXAxis(rearrangedPoints[i-1], rearrangedPoints[i]);
+                
+                console.log('angleA: ', angleA);
+                const angleB = angleWithXAxis(rearrangedPoints[i], rearrangedPoints[i-1]) -angleWithXAxis(rearrangedPoints[i], points[0]) ;
+                console.log('angleB: ', angleB);
+
+                const exterior_area = calcPolygonAreaASA(angleA,angleB,distance(rearrangedPoints[i], rearrangedPoints[i-1]));
+                console.log('exterior_area: ', exterior_area);
+                break;
+            }
+            console.groupEnd();
+            // else{
+            if(calcPolygonAreaShoelace(rearrangedPoints.slice(0,i))>=requiredArea){              
+                const LVertex = rearrangedPoints[i-2];
+                const NVertex = rearrangedPoints[i-1];     
+                
+                let newPolygon = rearrangedPoints.slice(0,i);
+                // newPolygon.push(pNewLatLng);
+                L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {color: 'green'}).addTo(map);
+                
+                break;
+            }
+            // }
+        }
+        // Habib One Point and Area Algorithm
+        for(let i=2;i<points.length;i++){
+            if(calcPolygonAreaShoelace(points.slice(0,i))>=requiredArea){
+                const LVertex = points[i-2];
+                const NVertex = points[i-1];
+                const areaDiff = requiredArea - calcPolygonAreaShoelace(points.slice(0,i-1));
+                // 
+                // 
+                // 
+                // 
+                const pDist = 2 * areaDiff / distance(LVertex, points[0]);
+                const pNewLatLng = [LVertex[0] + (NVertex[0] -LVertex[0]) * pDist/distance(NVertex,LVertex),LVertex[1] + (NVertex[1] -LVertex[1]) * pDist/distance(NVertex,LVertex)];
+                // 
+                // 
+                let habibPolygon = points.slice(0,i-1);
+                habibPolygon.push(pNewLatLng);
+                L.polygon(L.GeoJSON.coordsToLatLngs(habibPolygon), {color: 'red'}).addTo(map);
+                // debugger;
+                break;
+            }
+            // 
+        }
+    </script>
+</body>
+
+</html>
