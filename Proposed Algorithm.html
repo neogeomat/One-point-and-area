@@ -28,13 +28,13 @@
 
   <body>
     <div id="map"></div>
-    <script src="js/"></script>
+    <script src="js/jquery-3.2.1.min.js"></script>
     <script src="js/leaflet.js"></script>
     <script src="js/turf.min.js"></script>
     <script src="../qgis/polygon.geojson" type="text/javascript"></script>
     <script src="utils.js"></script>
     <script>
-      // create Leaflet map, centered on Texas
+      // create Leaflet map
       var map = L.map("map", {
         // zoomSnap: .1,
         // center: [-84.46,37.98],
@@ -58,7 +58,7 @@
           })
             .setLatLng(latLng)
             .setContent(`<span>${index}</span>`)
-            // .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
+            .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
             .addTo(labelLayer);
           // Apply styling to label if needed
         });
@@ -81,7 +81,7 @@
 
       // parameters
       const selectedPoint = points[0];
-      const requiredArea = 10;
+      const requiredArea = 120;
 
       // Proposed Algorithm
       // find angles and sort on increasing order
@@ -115,23 +115,66 @@
       // find the largest polygon with area less than required area
       // let areas = [];
       let areas = {};
-      for (let i = 1; i < rearrangedPoints.length; i++) {
+      for (let i = 3; i < rearrangedPoints.length; i++) {
+        let partitionLine = turf.lineString([
+          rearrangedPoints[0],
+          rearrangedPoints[i],
+        ]);
+        L.geoJson(partitionLine, { color: "red" }).addTo(map);
+        let intersects = turf.lineIntersect(polygonLayer, partitionLine);
+        console.log("intersects: ", intersects);
+
+        var partitionPolygon = rearrangedPoints.slice(0, i + 1);
+        partitionPolygon.push(rearrangedPoints[0]);
+        partitionPolygon = turf.polygon([partitionPolygon]);
+        // L.geoJson(partitionPolygon,{color:'pink'}).addTo(map);
+
+        var intersection = turf.intersect(
+          polygonLayer.features[0],
+          partitionPolygon
+        );
+        console.log("intersection: ", intersection);
+        L.geoJson(intersection, { color: "green" }).addTo(map);
+
+        var intersectionArea = turf.area(intersection);
+        console.log("intersectionArea: ", intersectionArea);
+
+        var areaIntersection = 0;
+        // debugger;
+        if (intersection.geometry.coordinates.length <= 1) {
+          areaIntersection = calcPolygonAreaShoelace(
+            intersection.geometry.coordinates[0]
+          );
+        } else {
+          
+          for (
+            let j = 0;
+            j < intersection.geometry.coordinates.length;
+            j++
+          ) {
+            areaIntersection += calcPolygonAreaShoelace(
+              intersection.geometry.coordinates[j][0]
+            );
+          }
+        }
+        console.log("areaIntersection: ", areaIntersection);
         console.group("concave check", i);
         // console.groupCollapsed('concave check',i);
-        console.log("i: ", i);
-        console.log("point no: ", pointsSlopesIndex[i]);
-        
+        // console.log("i: ", i);
+        // console.log("point no: ", pointsSlopesIndex[i]);
+
         const concaveAt = concaveIndex.filter((value) => {
           return value <= pointsSlopesIndex[i];
         });
 
-        console.log("concaveAt: ", concaveAt);
+        // console.log("concaveAt: ", concaveAt);
         const concaveYes = concaveIndex.some((value) => {
           return value <= pointsSlopesIndex[i];
         });
-        console.log("concaveYes: ", concaveYes);
+        // console.log("concaveYes: ", concaveYes);
         let interiorarea = 0;
         if (concaveYes) {
+          L.geoJSON(intersects, { color: "orange" }).addTo(map);
           const lastVertex = rearrangedPoints[i - 1];
           const currentVertex = rearrangedPoints[i];
           const area = calcPolygonAreaShoelace(
@@ -141,11 +184,11 @@
             angleWithXAxis(rearrangedPoints[i - 1], points[concaveAt[0]]) -
             angleWithXAxis(rearrangedPoints[i - 1], rearrangedPoints[i]);
 
-          console.log("angleA: ", angleA);
+          // console.log("angleA: ", angleA);
           const angleB =
             angleWithXAxis(rearrangedPoints[i], rearrangedPoints[i - 1]) -
             angleWithXAxis(rearrangedPoints[i], points[0]);
-          console.log("angleB: ", angleB);
+          // console.log("angleB: ", angleB);
 
           const exterior_area = calcPolygonAreaASA(
             angleA,
@@ -155,7 +198,7 @@
           // console.log('exterior_area: ', exterior_area);
 
           interiorarea = area - exterior_area;
-          console.log("interiorarea: ", interiorarea);
+          // console.log("interiorarea: ", interiorarea);
           areas[i] = interiorarea;
           // break;
         } else {
@@ -196,10 +239,10 @@
               ((NVertex[1] - LVertex[1]) * pDist) / distance(NVertex, LVertex),
           ];
           let newPolygon = rearrangedPoints.slice(0, i + 1);
-          console.log("newPolygon: ", newPolygon);
-          L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
-            color: "green",
-          }).addTo(map);
+          // console.log("newPolygon: ", newPolygon);
+          // L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
+          //   color: "green",
+          // }).addTo(map);
           // debugger;
           break;
         }
