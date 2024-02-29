@@ -27,7 +27,7 @@ function angleWithXAxis(origin, point){
 function calcPolygonAreaASA(angleA, angleB, includedSide) {
   // Calculate the third angle
   const angleC = 180 - (angleA + angleB);
-  console.log('angleC: ', angleC);
+  // console.log('angleC: ', angleC);
   // const angleC = Math.PI - (angleA + angleB);
 
   // Convert angles to radians for trigonometric functions
