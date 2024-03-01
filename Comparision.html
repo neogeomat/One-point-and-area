@@ -24,6 +24,7 @@
   </style>
   <script src="js/jquery-3.2.1.min.js"></script>
   <script src="js/leaflet.js"></script>
+  <script src="js/L.Map.Sync.js"></script>
   <script src="js/turf.min.js"></script>
   <script src="../qgis/polygon.geojson" type="text/javascript"></script>
   <script src="utils.js"></script>
@@ -84,14 +85,14 @@
         .setLatLng(latLng)
         .setContent(`<span>${index}</span>`)
         .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
-        .addTo(labelLayer_habib[row]);
+        // .addTo(labelLayer_habib[row]);
       // Apply styling to label if needed
     });
   var points_habib = (typeof points_habib === 'undefined') ? {} : points_habib;
   points_habib[row] = polygonLayer.features[0].geometry.coordinates[0];
 
   const selectedPoint = points_habib[row][0];
-  const requiredArea = 120;
+  const requiredArea = 750;
   // Habib One Point and Area Algorithm
   for (let i = 2; i < points_habib[row].length; i++) {
     if (calcPolygonAreaShoelace(points_habib[row].slice(0, i)) >= requiredArea) {
@@ -99,7 +100,7 @@
       const NVertex = points_habib[row][i - 1];
       const areaDiff =
         requiredArea - calcPolygonAreaShoelace(points_habib[row].slice(0, i - 1));
-      const pDist = (2 * areaDiff) / distance(LVertex, points_habib[row][0]);
+      const pDist = (2 * areaDiff) / (distance(LVertex, selectedPoint) * Math.sin(anticlockwiseAngle2D(NVertex,LVertex,selectedPoint)*Math.PI / 180));
       const pNewLatLng = [
         LVertex[0] +
         ((NVertex[0] - LVertex[0]) * pDist) / distance(NVertex, LVertex),
@@ -187,32 +188,43 @@
       partitionPolygon
     );
 
-    var areaIntersection = 0;
+    var areaIntersection = [];
     // debugger;
     if (intersection.geometry.coordinates.length <= 1) {
-      areaIntersection = calcPolygonAreaShoelace(
+      areaIntersection.push(calcPolygonAreaShoelace(
         intersection.geometry.coordinates[0]
-      );
+      ));
     } else {
-      
       for (
         let j = 0;
         j < intersection.geometry.coordinates.length;
         j++
       ) {
-        areaIntersection += calcPolygonAreaShoelace(
+        areaIntersection.push(calcPolygonAreaShoelace(
           intersection.geometry.coordinates[j][0]
-        );
+        ));
       }
     }
+    var interiorarea = areaIntersection.reduce((x, y) => x + y);
     L.geoJson(intersection, { color: "green" }).addTo(maps_proposed[row]);
-  console.log('areaIntersection: ', areaIntersection);
-  if(areaIntersection <= requiredArea ){
-    break;
-  }
+    console.log('areaIntersection: ', areaIntersection);
+    if(interiorarea  <= requiredArea ){
+      const areaDiff = requiredArea - interiorarea;
+      console.log('areaDiff: ', areaDiff);
+      const areaDiffPart = (areaDiff / interiorarea) * areaIntersection[0];
+      console.log('areaDiffPart: ', areaDiffPart);
+      const LVertex = points_proposed[row][i-2];
+      const NVertex = points_proposed[row][i-1];
+
+      const pDist = (2 * areaDiff) / (distance(LVertex, selectedPoint) * Math.sin(anticlockwiseAngle2D(NVertex, LVertex, selectedPoint)*Math.PI/180));
+      console.log('pDist: ', pDist);
+      break;
+    }
   }
   
   console.timeEnd('Proposed Execution Time');
+  maps_habib[1].sync(maps_proposed[1]);
+  maps_proposed[1].sync(maps_habib[1]);
 </script>
 
 </html>
