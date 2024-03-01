@@ -136,9 +136,6 @@
         console.log("intersection: ", intersection);
         L.geoJson(intersection, { color: "green" }).addTo(map);
 
-        var intersectionArea = turf.area(intersection);
-        console.log("intersectionArea: ", intersectionArea);
-
         var areaIntersection = 0;
         // debugger;
         if (intersection.geometry.coordinates.length <= 1) {
