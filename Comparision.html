@@ -154,6 +154,16 @@
   points_proposed[row] = polygonLayer.features[0].geometry.coordinates[0];
 
   // Proposed One Point and Area Algorithm
+  var intAngles = getPolygonAngles(points_proposed[row]);
+  console.log("intAngles: ", intAngles);
+  let concaveIndex = [];
+  for (let i = 0; i < intAngles.length; i++) {
+    if (intAngles[i] > 180) {
+      concaveIndex.push(i);
+    }
+  }
+  console.log("concave index: ", concaveIndex);
+
   var pointsSlopes = points_proposed[row].map((point, index) => {
     return {
       vertexindex: index,
@@ -173,18 +183,25 @@
   var pointsSlopesIndex = pointsSlopes.map((point, index) => {
     return point.vertexindex;
   });
-
+  var convexIndex = pointsSlopesIndex.filter((element) => !concaveIndex.includes(element));
+  // console.log('convexIndex: ', convexIndex);
   var rearrangedPoints = pointsSlopesIndex.map((index) => {
     return points_proposed[row][index];
   });
+  var rearrangedPointsConvex = convexIndex.map((index) => {
+    return points_proposed[row][index];
+  });
+  console.log('rearrangedPointsConvex: ', rearrangedPointsConvex);
   // find last partition polygon
   for (let i = 2; i < rearrangedPoints.length; i++) {
     console.log('i: ', i);
     var partitionPolygon = rearrangedPoints.slice(0, i + 1); // slice returns i-1 so parameter is i+1
+    // debugger;
     partitionPolygon.push(selectedPoint);
     console.log('partitionPolygon: ', partitionPolygon);
     var partitionPolygonTurf = turf.polygon([partitionPolygon]);
     L.geoJson(partitionPolygonTurf, { color: 'pink' }).addTo(maps_proposed[row]);
+    partitionPolygon.pop();
     var intersection = turf.intersect(
       polygonLayer.features[0],
       partitionPolygonTurf
@@ -237,7 +254,7 @@
     );
     console.log('intersection: ', intersection);
     var areaIntersection = [];
-    // debugger;
+    debugger;
     if (intersection.geometry.coordinates.length <= 1) {
       areaIntersection.push(calcPolygonAreaShoelace(
         intersection.geometry.coordinates[0]
@@ -277,10 +294,10 @@
       L.polygon(L.GeoJSON.coordsToLatLngs(LastPartitionPolygon), {
         color: "red",
       }).addTo(maps_proposed[row]);
-      derivePartitionPoly(rearrangedPoints, LastPartitionPolygon,LVertex,NVertex,requiredArea)
+      derivePartitionPoly(rearrangedPoints, LastPartitionPolygon, LVertex, NVertex, requiredArea)
     }
   }
-  derivePartitionPoly(rearrangedPoints, partitionPolygon, LVertex, NVertex, requiredArea);
+  // derivePartitionPoly(rearrangedPoints, partitionPolygon, LVertex, NVertex, requiredArea);
   console.timeEnd('Proposed Execution Time');
   maps_habib[1].sync(maps_proposed[1]);
   maps_proposed[1].sync(maps_habib[1]);
