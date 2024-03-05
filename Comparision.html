@@ -17,7 +17,7 @@
     .map {
       /* position: absolute; */
       width: 100%;
-      height: 250px;
+      height: 350px;
       /* top: 0; */
       /* bottom: 0; */
     }
@@ -66,6 +66,7 @@
     center: [35, 0],
     zoom: 2,
     crs: L.CRS.Simple,
+    zoomControl: false,
   });
 
   polygons_habib[row] = L.geoJSON(polygonLayer).addTo(maps_habib[row]);
@@ -92,7 +93,7 @@
   points_habib[row] = polygonLayer.features[0].geometry.coordinates[0];
 
   const selectedPoint = points_habib[row][0];
-  const requiredArea = 700;
+  const requiredArea = 1500;
   // Habib One Point and Area Algorithm
   for (let i = 2; i < points_habib[row].length; i++) {
     if (calcPolygonAreaShoelace(points_habib[row].slice(0, i)) >= requiredArea) {
@@ -128,6 +129,7 @@
     center: [35, 0],
     zoom: 2,
     crs: L.CRS.Simple,
+    zoomControl: false,
   });
   polygons_proposed[row] = L.geoJSON(polygonLayer).addTo(maps_proposed[row]);
   maps_proposed[row].fitBounds(polygons_proposed[row].getBounds());
@@ -304,7 +306,7 @@
   const inalPartitionPolygon = derivePartitionPoly(rearrangedPointsConvex, partitionPolygon.slice(0,-1), LVertex, NVertex, requiredArea);
   console.log('inalPartitionPolygon: ', inalPartitionPolygon);
   var l = L.geoJson(inalPartitionPolygon, {
-    color: 'orange'
+    color: 'black'
   }).addTo(maps_proposed[row]);
   console.timeEnd('Proposed Execution Time');
   maps_habib[1].sync(maps_proposed[1]);
