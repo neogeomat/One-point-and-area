@@ -41,8 +41,8 @@
           Hybrid Algorithm
         </div> -->
       </div>
-      <div class="col description">
-        <span >Select Point 
+      <div class="col combined">
+        <span>Select Point
           <select id="selectPoint"></select>
         </span>
         <p></p>
@@ -56,13 +56,13 @@
 <script>
   var $habib = $(".habib");
   var $proposed = $(".proposed");
-  var $hybrid = $(".hybrid");
+  var $combined = $(".combined");
   var maps_habib = {};
   var maps_proposed = {};
-  var maps_hybrid = {};
+  var maps_combined = {};
   var polygons_habib = {};
   var polygons_proposed = {};
-  var polygons_hybrid = {};
+  var polygons_combined = {};
 </script>
 <script>
 
@@ -73,17 +73,20 @@
     .forEach((xy, index) => {
       $selectPoint.append($('<option></option>').attr('value', index).text(index));
     });
-  const $requiredArea = $('#requiredArea');
   function performSplit() {
     var selectedPointIndex = document.getElementById('selectPoint').value;
     console.log('selectedPointIndex: ', selectedPointIndex);
     var requiredArea = document.getElementById('requiredArea').value;
     console.log('requiredArea: ', requiredArea);
+    if(requiredArea > calcPolygonAreaShoelace(points)){
+      alert('Required Area is greater than Polygon Area');
+    }
+    habib(selectedPointIndex, requiredArea);
+    proposed(selectedPointIndex, requiredArea);
+    combined();
   }
 </script>
 <script algo="Habib">
-  var row = 1;
-  console.time('Habib Execution Time');
   var $habib11 = $("<div></div>").addClass("map").attr({
     id: "habibMap" + row,
   });
@@ -98,62 +101,69 @@
   polygons_habib[row] = L.geoJSON(polygonLayer).addTo(maps_habib[row]);
   maps_habib[row].fitBounds(polygons_habib[row].getBounds());
   maps_habib[row].invalidateSize();
-  // create a layer to hold labels
-  var labelLayer_habib = (typeof labelLayer_habib === "undefined") ? {} : labelLayer_habib;
-  labelLayer_habib[row] = L.featureGroup().addTo(maps_habib[row]);
+  function habib(selectedPointIndex, requiredArea) {
+    var row = 1;
+    console.time('Habib Execution Time');
 
-  var points_habib = (typeof points_habib === 'undefined') ? {} : points_habib;
-  points_habib[row] = polygonLayer.features[0].geometry.coordinates[0].slice();
+    // create a layer to hold labels
+    var labelLayer_habib = (typeof labelLayer_habib === "undefined") ? {} : labelLayer_habib;
+    labelLayer_habib[row] = L.featureGroup().addTo(maps_habib[row]);
+
+    var points_habib = (typeof points_habib === 'undefined') ? {} : points_habib;
+    points_habib[row] = polygonLayer.features[0].geometry.coordinates[0].slice();
 
 
-  // add labels to each vertex of the polygon
-  points_habib[row]
-    .forEach((xy, index) => {
-      // console.log('xy: ', xy);
-      const label = L.tooltip({
-        direction: "auto",
-      })
-        .setLatLng({ lat: xy[1], lng: xy[0] })
-        .setContent(`<span>${index}</span>`)
-        // .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
-        .addTo(labelLayer_habib[row]);
-      // Apply styling to label if needed
+    // add labels to each vertex of the polygon
+    points_habib[row]
+      .forEach((xy, index) => {
+        // console.log('xy: ', xy);
+        const label = L.tooltip({
+          direction: "auto",
+        })
+          .setLatLng({ lat: xy[1], lng: xy[0] })
+          .setContent(`<span>${index}</span>`)
+          // .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
+          .addTo(labelLayer_habib[row]);
+        // Apply styling to label if needed
 
-    });
-  const selectedPointIndex = 0;
-  const selectedPoint = points_habib[row][selectedPointIndex];
-  const requiredArea = 1000;
+      });
+    // const selectedPointIndex = 0;
+    const selectedPoint = points_habib[row][selectedPointIndex];
+    // const requiredArea = 1000;
 
-  const frontPoints = points_habib[row].splice(0, selectedPointIndex);
-  points_habib[row] = [...points_habib[row], ...frontPoints];
-  // console.log('points_habib[row]: ', points_habib[row]);  
-  // Habib One Point and Area Algorithm
-  for (let i = 2; i < points_habib[row].length; i++) {
-    if (calcPolygonAreaShoelace(points_habib[row].slice(0, i)) >= requiredArea) {
-      const LVertex = points_habib[row][i - 2];
-      const NVertex = points_habib[row][i - 1];
-      const areaDiff =
-        requiredArea - calcPolygonAreaShoelace(points_habib[row].slice(0, i - 1));
-      const pDist = (2 * areaDiff) / (distance(LVertex, selectedPoint) * Math.sin(anticlockwiseAngle2D(NVertex, LVertex, selectedPoint) * Math.PI / 180));
-      const pNewLatLng = [
-        LVertex[0] +
-        ((NVertex[0] - LVertex[0]) * pDist) / distance(NVertex, LVertex),
-        LVertex[1] +
-        ((NVertex[1] - LVertex[1]) * pDist) / distance(NVertex, LVertex),
-      ];
-      var newPolygon = points_habib[row].slice(0, i - 1);
-      newPolygon.push(pNewLatLng);
-      L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
-        color: "red",
-      }).addTo(maps_habib[row]);
-      break;
+    const frontPoints = points_habib[row].splice(0, selectedPointIndex);
+    points_habib[row] = [...points_habib[row], ...frontPoints];
+    // console.log('points_habib[row]: ', points_habib[row]);  
+    // Habib One Point and Area Algorithm
+    for (let i = 2; i < points_habib[row].length; i++) {
+      if (calcPolygonAreaShoelace(points_habib[row].slice(0, i)) >= requiredArea) {
+        const LVertex = points_habib[row][i - 2];
+        const NVertex = points_habib[row][i - 1];
+        const areaDiff =
+          requiredArea - calcPolygonAreaShoelace(points_habib[row].slice(0, i - 1));
+        const pDist = (2 * areaDiff) / (distance(LVertex, selectedPoint) * Math.sin(anticlockwiseAngle2D(NVertex, LVertex, selectedPoint) * Math.PI / 180));
+        const pNewLatLng = [
+          LVertex[0] +
+          ((NVertex[0] - LVertex[0]) * pDist) / distance(NVertex, LVertex),
+          LVertex[1] +
+          ((NVertex[1] - LVertex[1]) * pDist) / distance(NVertex, LVertex),
+        ];
+        var newPolygon = points_habib[row].slice(0, i - 1);
+        newPolygon.push(pNewLatLng);
+        L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
+          color: "red",
+        }).addTo(maps_habib[row]);
+        L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
+          color: "red",
+        }).addTo(maps_combined[row]);
+        break;
+      }
+      //
     }
-    //
+    console.timeEnd('Habib Execution Time');
   }
-  console.timeEnd('Habib Execution Time');
 </script>
 <script algo="proposed">
-  console.time('Proposed Execution Time');
   var $proposed11 = $("<div></div>").addClass("map").attr({
     id: "proposedMap" + row,
   });
@@ -167,6 +177,11 @@
   polygons_proposed[row] = L.geoJSON(polygonLayer).addTo(maps_proposed[row]);
   maps_proposed[row].fitBounds(polygons_proposed[row].getBounds());
   maps_proposed[row].invalidateSize();
+
+  function proposed(selectedPointIndex, requiredArea) {
+    var row = 1;
+  console.time('Proposed Execution Time');
+
   // create a layer to hold labels
   var labelLayer_proposed = (typeof labelLayer_proposed === "undefined") ? {} : labelLayer_proposed;
   labelLayer_proposed[row] = L.featureGroup().addTo(maps_proposed[row]);
@@ -175,7 +190,9 @@
   points_proposed[row] = polygonLayer.features[0].geometry.coordinates[0].slice();
   // debugger;
   // console.log('points_proposed: ', points_proposed);
-
+  // const selectedPointIndex = 0;
+  // const selectedPoint = points_habib[row][selectedPointIndex];
+  // const requiredArea = 1000;
   const selectedPointProposed = points_proposed[row][selectedPointIndex];
 
   const frontPointsProposed = points_proposed[row].splice(0, selectedPointIndex);
@@ -240,7 +257,7 @@
 
     var partitionPolygon = rearrangedPointsConvex.slice(0, i + 1); // slice returns i-1 so parameter is i+1
     // debugger;
-    partitionPolygon.push(selectedPoint);
+    partitionPolygon.push(selectedPointProposed);
     // debugger;
     var partitionPolygonTurf = turf.polygon([partitionPolygon]);
     // L.geoJson(partitionPolygonTurf, { color: 'pink' }).addTo(maps_proposed[row]);
@@ -291,7 +308,7 @@
     const LastPartitionPolygon = partitionPolygon;
 
 
-    LastPartitionPolygon.push(selectedPoint);
+    LastPartitionPolygon.push(selectedPointProposed);
     var LastPartitionPolygonTurf = turf.polygon([LastPartitionPolygon]);
     LastPartitionPolygon.pop();
     // L.geoJson(LastPartitionPolygonTurf, {style: {color: 'red'}}).addTo(maps_proposed[row]);
@@ -326,7 +343,7 @@
     if (areaDiff <= 1) { //tolerance level
       return intersection
     } else {
-      const pDist = (2 * areaDiff) / (distance(LVertex, selectedPoint) * Math.sin(anticlockwiseAngle2D(NVertex, LVertex, selectedPoint) * Math.PI / 180));
+      const pDist = (2 * areaDiff) / (distance(LVertex, selectedPointProposed) * Math.sin(anticlockwiseAngle2D(NVertex, LVertex, selectedPointProposed) * Math.PI / 180));
 
       const pNewLatLng = [
         LVertex[0] +
@@ -351,7 +368,27 @@
   var l = L.geoJson(FinalPartitionPolygon, {
     color: 'black'
   }).addTo(maps_proposed[row]);
+  L.geoJson(FinalPartitionPolygon, {
+    color: 'black'
+  }).addTo(maps_combined[row]);
   console.timeEnd('Proposed Execution Time');
+}
+</script>
+<script>
+  var $combined11 = $("<div></div>").addClass("map").attr({
+    id: "combinedMap" + row,
+  });
+  $combined.append($combined11);
+  maps_combined[row] = L.map("combinedMap" + row, {
+    center: [35, 0],
+    zoom: 2,
+    crs: L.CRS.Simple,
+    zoomControl: false,
+  })
+  polygons_combined[row] = L.geoJSON(polygonLayer).addTo(maps_combined[row]);
+  maps_combined[row].fitBounds(polygons_combined[row].getBounds());
+  
+  maps_habib[row].invalidateSize();
   maps_habib[1].sync(maps_proposed[1]);
   maps_proposed[1].sync(maps_habib[1]);
 </script>
