@@ -212,16 +212,24 @@
         concaveIndex.push(i);
       }
     }
+    var convexIndex = [];
+    for (let i = 0; i < intAngles.length; i++) {
+      if (intAngles[i] < 180) {
+        convexIndex.push(i);
+      }
+    }
     var pointsSlopes = points_proposed[row].map((point, index) => {
       return {
         vertexindex: index,
         angleXaxis: angleWithXAxis(points_proposed[row][0], point),
       };
     });
+    // debugger;
+    var baseLineForAngleIndex = concaveIndex.includes(1)?convexIndex[1]:1;
     var pointAngles = pointsSlopes.map((point) =>
-      point.angleXaxis - pointsSlopes[1].angleXaxis >= 0
-        ? point.angleXaxis - pointsSlopes[1].angleXaxis
-        : point.angleXaxis - pointsSlopes[1].angleXaxis + 360
+      point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis >= 0
+        ? point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis
+        : point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis + 360
     );
     pointAngles[0] = 0;
     pointsSlopes.forEach((item, i) => {
@@ -232,7 +240,7 @@
       return point.vertexindex;
     });
     // debugger
-    var convexIndex = pointsSlopesIndex.filter((element) => !concaveIndex.includes(element) || element== 0 || element == 1);
+    var convexIndex = pointsSlopesIndex.filter((element) => !concaveIndex.includes(element) || element== 0);
     var rearrangedPoints = pointsSlopesIndex.map((index) => {
       return points_proposed[row][index];
     });
@@ -241,7 +249,7 @@
     });
     // find last partition polygon
     for (let i = 2; i < rearrangedPointsConvex.length; i++) {
-      debugger
+      // debugger
       var partitionPolygon = rearrangedPointsConvex.slice(0, i + 1); // slice returns i-1 so parameter is i+1
       // debugger;
       partitionPolygon.push(selectedPointProposed);
@@ -282,7 +290,7 @@
     // console.log('%c partitionPoly' + partitionPolygon, 'background: #FFF; color:red ')
 
     function derivePartitionPoly(rearrangedPointsConvex, partitionPolygon, LVertex, NVertex, requiredArea) {
-      debugger;
+      // debugger;
       const LastPartitionPolygon = partitionPolygon;
       LastPartitionPolygon.push(selectedPointProposed);
       if(LastPartitionPolygon.length <= 3){
