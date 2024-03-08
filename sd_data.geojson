@@ -1,4 +1,4 @@
-{
+var polygonLayer = {
 "type": "FeatureCollection",
 "name": "sd_data",
 "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:ESRI::102306" } },
