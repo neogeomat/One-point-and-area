@@ -1,0 +1,1 @@
+"C:\Users\neogeomat\AppData\Roaming\npm\geojson-rewind.cmd" "D:\akarma_mirror\Masters\NCIT\Thesis\parcelSubDivision\code\sd_data.geojson" > "D:\akarma_mirror\Masters\NCIT\Thesis\parcelSubDivision\code\sd_data_rewind.geojson"

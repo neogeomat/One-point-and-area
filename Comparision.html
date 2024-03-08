@@ -72,14 +72,13 @@
   var polygons_combined = {};
 </script>
 <script>
-
   var row = 1;
   const $selectPolygon = $('#selectPolygon');
   polygonLayer.features
     .forEach((polygon, index) => {
       $selectPolygon.append($('<option></option>').attr('value', index).text(index));
     });
-  $selectPolygon.change(function(){
+  $selectPolygon.change(function () {
     var selectedPolygon = $(this).val();
     console.log('selectedPolygon: ', selectedPolygon);
     // alert(selectedPolygon);
@@ -90,17 +89,17 @@
     // debugger;
     $selectPoint.empty();
     // create a layer to hold labels
-  points
-    .forEach((xy, index) => {
-      $selectPoint.append($('<option></option>').attr('value', index).text(index));
-      const label = L.tooltip({
+    points
+      .forEach((xy, index) => {
+        $selectPoint.append($('<option></option>').attr('value', index).text(index));
+        const label = L.tooltip({
           direction: "auto",
         })
           .setLatLng({ lat: xy[1], lng: xy[0] })
           .setContent(`<span>${index}</span>`)
           // .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
           .addTo(labelLayer_habib[row]);
-    });
+      });
     maps_habib[row].fitBounds(polygons_habib[row].getLayers()[selectedPolygon].getBounds());
   })
   var points = polygonLayer.features[0].geometry.coordinates[0].slice();
@@ -137,8 +136,19 @@
   polygons_habib[row] = L.geoJSON(polygonLayer).addTo(maps_habib[row]);
   maps_habib[row].fitBounds(polygons_habib[row].getLayers()[0].getBounds());
   var labelLayer_habib = (typeof labelLayer_proposed === "undefined") ? {} : labelLayer_habib;
-    labelLayer_habib[row] = L.featureGroup().addTo(maps_habib[row]);
-  var layerSwitcher_habib = L.control.layers({},{"labels":labelLayer_habib[row]}).addTo(maps_habib[row]);
+  labelLayer_habib[row] = L.featureGroup().addTo(maps_habib[row]);
+  points
+    .forEach((xy, index) => {
+      const label = L.tooltip({
+        direction: "auto",
+      })
+        .setLatLng({ lat: xy[1], lng: xy[0] })
+        .setContent(`<span>${index}</span>`)
+        // .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
+        .addTo(labelLayer_habib[row]);
+    });
+    $('#polygonInfo').text('Polygon Area: ' + calcPolygonAreaShoelace(points));
+  var layerSwitcher_habib = L.control.layers({}, { "labels": labelLayer_habib[row] }, { collapsed: false }).addTo(maps_habib[row]);
   function habib(selectedPointIndex, requiredArea) {
     var row = 1;
     console.time('Habib Execution Time');
@@ -226,17 +236,17 @@
     // console.log('frontPointsProposed: ', frontPointsProposed);
     points_proposed[row] = [...points_proposed[row], ...frontPointsProposed];
     // add labels to each vertex of the polygon
-    points_proposed[row]
-      .forEach((xy, index) => {
-        const label = L.tooltip({
-          direction: "auto",
-        })
-          .setLatLng({ lat: xy[1], lng: xy[0] })
-          .setContent(`<span>${index}</span>`)
-          // .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
-          .addTo(labelLayer_proposed[row]);
-        // Apply styling to label if needed
-      });
+    // points_proposed[row]
+    //   .forEach((xy, index) => {
+    //     const label = L.tooltip({
+    //       direction: "auto",
+    //     })
+    //       .setLatLng({ lat: xy[1], lng: xy[0] })
+    //       .setContent(`<span>${index}</span>`)
+    //       // .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
+    //       .addTo(labelLayer_proposed[row]);
+    //     // Apply styling to label if needed
+    //   });
     // Proposed One Point and Area Algorithm
     var intAngles = getPolygonAngles(points_proposed[row]);
 
@@ -259,7 +269,7 @@
       };
     });
     // debugger;
-    var baseLineForAngleIndex = concaveIndex.includes(1)?convexIndex[1]:1;
+    var baseLineForAngleIndex = concaveIndex.includes(1) ? convexIndex[1] : 1;
     var pointAngles = pointsSlopes.map((point) =>
       point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis >= 0
         ? point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis
@@ -274,7 +284,7 @@
       return point.vertexindex;
     });
     // debugger
-    var convexIndex = pointsSlopesIndex.filter((element) => !concaveIndex.includes(element) || element== 0);
+    var convexIndex = pointsSlopesIndex.filter((element) => !concaveIndex.includes(element) || element == 0);
     var rearrangedPoints = pointsSlopesIndex.map((index) => {
       return points_proposed[row][index];
     });
@@ -327,13 +337,13 @@
       // debugger;
       const LastPartitionPolygon = partitionPolygon;
       LastPartitionPolygon.push(selectedPointProposed);
-      if(LastPartitionPolygon.length <= 3){
+      if (LastPartitionPolygon.length <= 3) {
         LastPartitionPolygon.push(selectedPointProposed);
         var threePointcase = true;
       }
       var LastPartitionPolygonTurf = turf.polygon([LastPartitionPolygon]);
       LastPartitionPolygon.pop();
-      if(threePointcase){
+      if (threePointcase) {
         LastPartitionPolygon.pop();
         threePointcase = false;
       }
@@ -345,9 +355,9 @@
 
       var areaIntersection = [];
       // debugger;
-      if(!intersection){
+      if (!intersection) {
         areaIntersection.push(0);
-      }else if (intersection.geometry.coordinates.length <= 1) {
+      } else if (intersection.geometry.coordinates.length <= 1) {
         areaIntersection.push(calcPolygonAreaShoelace(
           intersection.geometry.coordinates[0]
         ));
