@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -36,16 +35,17 @@
   <div class="container">
     <div class="row">
       <div class="col habib">Habib Algorithm</div>
-      <div class="col proposed">
-        Proposed Algorithm
+      <div class="col proposed">Proposed Algorithm
       </div>
       <div class="col combined">
-        <span>Select Polygon
+        <span>
+          Select Polygon
           <select id="selectPolygon"></select>
           <span id="polygonInfo">Polygon Area</span>
         </span>
         <p></p>
-        <span>Select Point
+        <span>
+          Select Point
           <select id="selectPoint"></select>
         </span>
         <p></p>
@@ -66,19 +66,21 @@
   var polygons_habib = {};
   var polygons_proposed = {};
   var polygons_combined = {};
-  var LnewPolygonHabib; // placeholder for habibs result
-  var LnewPolygonProposed; // placeholder for proposed result
+  var LnewPolygonHabib;
+  // placeholder for habibs result
+  var LnewPolygonProposed;
+  // placeholder for proposed result
   var LnewPolygonHabibCombined;
-  var LnewPolygonProposedCombined; 
+  var LnewPolygonProposedCombined;
   var selectedPolygon = 0;
 </script>
 <script>
   var row = 1;
   const $selectPolygon = $('#selectPolygon');
-  polygonLayer.features
-    .forEach((polygon, index) => {
-      $selectPolygon.append($('<option></option>').attr('value', index).text(index));
-    });
+  polygonLayer.features.forEach((polygon, index) => {
+    $selectPolygon.append($('<option></option>').attr('value', index).text(index));
+  }
+  );
   $selectPolygon.change(function () {
     selectedPolygon = $(this).val();
     console.log('selectedPolygon: ', selectedPolygon);
@@ -86,7 +88,7 @@
     points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].slice();
     points.pop();
     // debugger;
-    if(calcPolygonAreaShoelace(points) < 0) {
+    if (calcPolygonAreaShoelace(points) < 0) {
       points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
     }
     $('#polygonInfo').text('Polygon Area: ' + calcPolygonAreaShoelace(points));
@@ -94,29 +96,29 @@
     // debugger;
     $selectPoint.empty();
     // create a layer to hold labels
-    points
-      .forEach((xy, index) => {
-        $selectPoint.append($('<option></option>').attr('value', index).text(index));
-        const label = L.tooltip({
-          direction: "auto",
-        })
-          .setLatLng({ lat: xy[1], lng: xy[0] })
-          .setContent(`<span>${index}</span>`)
-          // .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
-          .addTo(labelLayer_habib[row]);
-      });
+    points.forEach((xy, index) => {
+      $selectPoint.append($('<option></option>').attr('value', index).text(index));
+      const label = L.tooltip({
+        direction: "auto",
+      }).setLatLng({
+        lat: xy[1],
+        lng: xy[0]
+      }).setContent(`<span>${index}</span>`)// .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
+        .addTo(labelLayer_habib[row]);
+    }
+    );
     maps_habib[row].fitBounds(polygons_habib[row].getLayers()[selectedPolygon].getBounds());
   })
   var points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].slice();
-  if(calcPolygonAreaShoelace(points) < 0) {
-      points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
-    }
+  if (calcPolygonAreaShoelace(points) < 0) {
+    points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
+  }
   const $selectPoint = $('#selectPoint');
   points.pop();
-  points
-    .forEach((xy, index) => {
-      $selectPoint.append($('<option></option>').attr('value', index).text(index));
-    });
+  points.forEach((xy, index) => {
+    $selectPoint.append($('<option></option>').attr('value', index).text(index));
+  }
+  );
   function performSplit() {
     var selectedPointIndex = document.getElementById('selectPoint').value;
     console.log('selectedPointIndex: ', selectedPointIndex);
@@ -136,7 +138,7 @@
     var end = performance.now();
     var timeTakenProposed = end - start;
     $proposed_info.html('Time Taken: ' + timeTakenProposed.toFixed(2) + ' ms');
-    
+
     // combined();
   }
 </script>
@@ -160,18 +162,22 @@
   var labelLayer_habib = (typeof labelLayer_proposed === "undefined") ? {} : labelLayer_habib;
   labelLayer_habib[row] = L.featureGroup().addTo(maps_habib[row]);
   points.pop();
-  points
-    .forEach((xy, index) => {
-      const label = L.tooltip({
-        direction: "auto",
-      })
-        .setLatLng({ lat: xy[1], lng: xy[0] })
-        .setContent(`<span>${index}</span>`)
-        // .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
-        .addTo(labelLayer_habib[row]);
-    });
-    $('#polygonInfo').text('Polygon Area: ' + calcPolygonAreaShoelace(points));
-  var layerSwitcher_habib = L.control.layers({}, { "labels": labelLayer_habib[row] }, { collapsed: false }).addTo(maps_habib[row]);
+  points.forEach((xy, index) => {
+    const label = L.tooltip({
+      direction: "auto",
+    }).setLatLng({
+      lat: xy[1],
+      lng: xy[0]
+    }).setContent(`<span>${index}</span>`)// .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
+      .addTo(labelLayer_habib[row]);
+  }
+  );
+  $('#polygonInfo').text('Polygon Area: ' + calcPolygonAreaShoelace(points));
+  var layerSwitcher_habib = L.control.layers({}, {
+    "labels": labelLayer_habib[row]
+  }, {
+    collapsed: false
+  }).addTo(maps_habib[row]);
   function habib(selectedPointIndex, requiredArea) {
     var row = 1;
     console.time('Habib Execution Time');
@@ -183,23 +189,23 @@
     var points_habib = (typeof points_habib === 'undefined') ? {} : points_habib;
     points_habib[row] = polygonLayer.features[selectedPolygon].geometry.coordinates[0].slice();
     points_habib[row].pop();
-    if(calcPolygonAreaShoelace(points_habib[row]) < 0) {
+    if (calcPolygonAreaShoelace(points_habib[row]) < 0) {
       points_habib[row] = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
     }
     // add labels to each vertex of the polygon
-    points_habib[row]
-      .forEach((xy, index) => {
-        // console.log('xy: ', xy);
-        const label = L.tooltip({
-          direction: "auto",
-        })
-          .setLatLng({ lat: xy[1], lng: xy[0] })
-          .setContent(`<span>${index}</span>`)
-          // .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
-          .addTo(labelLayer_habib[row]);
-        // Apply styling to label if needed
+    points_habib[row].forEach((xy, index) => {
+      // console.log('xy: ', xy);
+      const label = L.tooltip({
+        direction: "auto",
+      }).setLatLng({
+        lat: xy[1],
+        lng: xy[0]
+      }).setContent(`<span>${index}</span>`)// .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
+        .addTo(labelLayer_habib[row]);
+      // Apply styling to label if needed
 
-      });
+    }
+    );
     // const selectedPointIndex = 0;
     const selectedPoint = points_habib[row][selectedPointIndex];
     // const requiredArea = 1000;
@@ -212,26 +218,20 @@
       if (calcPolygonAreaShoelace(points_habib[row].slice(0, i)) >= requiredArea) {
         const LVertex = points_habib[row][i - 2];
         const NVertex = points_habib[row][i - 1];
-        const areaDiff =
-          requiredArea - calcPolygonAreaShoelace(points_habib[row].slice(0, i - 1));
+        const areaDiff = requiredArea - calcPolygonAreaShoelace(points_habib[row].slice(0, i - 1));
         const pDist = (2 * areaDiff) / (distance(LVertex, selectedPoint) * Math.sin(anticlockwiseAngle2D(NVertex, LVertex, selectedPoint) * Math.PI / 180));
-        const pNewLatLng = [
-          LVertex[0] +
-          ((NVertex[0] - LVertex[0]) * pDist) / distance(NVertex, LVertex),
-          LVertex[1] +
-          ((NVertex[1] - LVertex[1]) * pDist) / distance(NVertex, LVertex),
-        ];
+        const pNewLatLng = [LVertex[0] + ((NVertex[0] - LVertex[0]) * pDist) / distance(NVertex, LVertex), LVertex[1] + ((NVertex[1] - LVertex[1]) * pDist) / distance(NVertex, LVertex),];
         var newPolygon = points_habib[row].slice(0, i - 1);
         newPolygon.push(pNewLatLng);
-        
-        if(maps_habib[row].hasLayer(LnewPolygonHabib)){
+
+        if (maps_habib[row].hasLayer(LnewPolygonHabib)) {
           maps_habib[row].removeLayer(LnewPolygonHabib);
         }
-         LnewPolygonHabib = L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
+        LnewPolygonHabib = L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
           color: "red",
         }).addTo(maps_habib[row]);
         // debugger;
-        if(maps_combined[row].hasLayer(LnewPolygonHabibCombined)){
+        if (maps_combined[row].hasLayer(LnewPolygonHabibCombined)) {
           maps_combined[row].removeLayer(LnewPolygonHabibCombined);
         }
         LnewPolygonHabibCombined = L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
@@ -270,7 +270,7 @@
     // add labels to each vertex of the polygon
     var points_proposed = (typeof points_proposed === 'undefined') ? {} : points_proposed;
     points_proposed[row] = polygonLayer.features[selectedPolygon].geometry.coordinates[0].slice();
-    if(calcPolygonAreaShoelace(points_proposed[row]) < 0) {
+    if (calcPolygonAreaShoelace(points_proposed[row]) < 0) {
       points_proposed[row].reverse();
     }
     const selectedPointProposed = points_proposed[row][selectedPointIndex];
@@ -309,70 +309,63 @@
         vertexindex: index,
         angleXaxis: angleWithXAxis(points_proposed[row][0], point),
       };
-    });
+    }
+    );
     // debugger;
     var baseLineForAngleIndex = concaveIndex.includes(1) ? convexIndex[1] : 1;
-    var pointAngles = pointsSlopes.map((point) =>
-      point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis >= 0
-        ? point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis
-        : point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis + 360
-    );
+    var pointAngles = pointsSlopes.map((point) => point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis >= 0 ? point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis : point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis + 360);
     pointAngles[0] = 0;
     pointsSlopes.forEach((item, i) => {
       pointsSlopes[i].angle = pointAngles[i];
-    });
+    }
+    );
     pointsSlopes.sort((a, b) => a.angle - b.angle);
     var pointsSlopesIndex = pointsSlopes.map((point, index) => {
       return point.vertexindex;
-    });
+    }
+    );
     // debugger
     var convexIndex = pointsSlopesIndex.filter((element) => !concaveIndex.includes(element) || element == 0);
     var rearrangedPoints = pointsSlopesIndex.map((index) => {
       return points_proposed[row][index];
-    });
+    }
+    );
     var rearrangedPointsConvex = convexIndex.map((index) => {
       return points_proposed[row][index];
-    });
+    }
+    );
     // find last partition polygon
     for (let i = 2; i < rearrangedPointsConvex.length; i++) {
       // debugger
-      var partitionPolygon = rearrangedPointsConvex.slice(0, i + 1); // slice returns i-1 so parameter is i+1
+      var partitionPolygon = rearrangedPointsConvex.slice(0, i + 1);
+      // slice returns i-1 so parameter is i+1
       // debugger;
       partitionPolygon.push(selectedPointProposed);
       // debugger;
       var partitionPolygonTurf = turf.polygon([partitionPolygon]);
-      L.geoJson(partitionPolygonTurf, { color: 'pink' }).addTo(maps_proposed[row]);
+      // L.geoJson(partitionPolygonTurf, {
+      //   color: 'pink'
+      // }).addTo(maps_proposed[row]);
       partitionPolygon.pop();
-      var intersection = turf.intersect(
-        polygonLayer.features[selectedPolygon],
-        partitionPolygonTurf
-      );
+      var intersection = turf.intersect(polygonLayer.features[selectedPolygon], partitionPolygonTurf);
       var areaIntersection = [];
-      debugger;
+      // debugger;
       if (!intersection) {
         areaIntersection.push(0);
-      } else
-      if (intersection.geometry.coordinates.length <= 1) {
-        areaIntersection.push(calcPolygonAreaShoelace(
-          intersection.geometry.coordinates[0]
-        ));
+      } else if (intersection.geometry.coordinates.length <= 1) {
+        areaIntersection.push(calcPolygonAreaShoelace(intersection.geometry.coordinates[0]));
       } else {
-        for (
-          let j = 0;
-          j < intersection.geometry.coordinates.length;
-          j++
-        ) {
-          areaIntersection.push(calcPolygonAreaShoelace(
-            intersection.geometry.coordinates[j][0]
-          ));
+        for (let j = 0; j < intersection.geometry.coordinates.length; j++) {
+          areaIntersection.push(calcPolygonAreaShoelace(intersection.geometry.coordinates[j][0]));
         }
       }
       var interiorarea = areaIntersection.reduce((x, y) => x + y);
 
       // stop when interior area gets larger than required area
       if (interiorarea - requiredArea >= 0.01) {
+        debugger;
         var LVertex = rearrangedPointsConvex[i - 1];
-        var NVertex = points_proposed[row][pointsSlopesIndex[i - 1] + 1];
+        var NVertex = points_proposed[row][convexIndex[i - 1] + 1];
         break;
       }
     }
@@ -392,30 +385,23 @@
         LastPartitionPolygon.pop();
         threePointcase = false;
       }
-      debugger;
-      L.geoJson(LastPartitionPolygonTurf, {style: {color: 'red'}}).addTo(maps_proposed[row]);
-      var intersection = turf.intersect(
-        polygonLayer.features[selectedPolygon],
-        LastPartitionPolygonTurf
-      );
+      // debugger;
+      // L.geoJson(LastPartitionPolygonTurf, {
+      //   style: {
+      //     color: 'red'
+      //   }
+      // }).addTo(maps_proposed[row]);
+      var intersection = turf.intersect(polygonLayer.features[selectedPolygon], LastPartitionPolygonTurf);
 
       var areaIntersection = [];
       // debugger;
       if (!intersection) {
         areaIntersection.push(0);
       } else if (intersection.geometry.coordinates.length <= 1) {
-        areaIntersection.push(calcPolygonAreaShoelace(
-          intersection.geometry.coordinates[0]
-        ));
+        areaIntersection.push(calcPolygonAreaShoelace(intersection.geometry.coordinates[0]));
       } else {
-        for (
-          let j = 0;
-          j < intersection.geometry.coordinates.length;
-          j++
-        ) {
-          areaIntersection.push(calcPolygonAreaShoelace(
-            intersection.geometry.coordinates[j][0]
-          ));
+        for (let j = 0; j < intersection.geometry.coordinates.length; j++) {
+          areaIntersection.push(calcPolygonAreaShoelace(intersection.geometry.coordinates[j][0]));
         }
       }
       var interiorarea = areaIntersection.reduce((x, y) => x + y);
@@ -424,17 +410,13 @@
       const areaDiff = requiredArea - interiorarea;
 
       // debugger;
-      if (areaDiff <= 1) { //tolerance level
+      if (areaDiff <= 1) {
+        //tolerance level
         return intersection
       } else {
         const pDist = (2 * areaDiff) / (distance(LVertex, selectedPointProposed) * Math.sin(anticlockwiseAngle2D(NVertex, LVertex, selectedPointProposed) * Math.PI / 180));
 
-        const pNewLatLng = [
-          LVertex[0] +
-          ((NVertex[0] - LVertex[0]) * pDist) / distance(NVertex, LVertex),
-          LVertex[1] +
-          ((NVertex[1] - LVertex[1]) * pDist) / distance(NVertex, LVertex),
-        ];
+        const pNewLatLng = [LVertex[0] + ((NVertex[0] - LVertex[0]) * pDist) / distance(NVertex, LVertex), LVertex[1] + ((NVertex[1] - LVertex[1]) * pDist) / distance(NVertex, LVertex),];
 
         LastPartitionPolygon.splice(LastPartitionPolygon.length, 0, pNewLatLng);
         // L.polygon(L.GeoJSON.coordsToLatLngs(LastPartitionPolygon), {
@@ -449,14 +431,14 @@
     // console.log('NVertex: ', NVertex);
     // console.log('LVertex: ', LVertex);
 
-    if(maps_proposed[row].hasLayer(LnewPolygonProposed)){
+    if (maps_proposed[row].hasLayer(LnewPolygonProposed)) {
       maps_proposed[row].removeLayer(LnewPolygonProposed);
     }
     LnewPolygonProposed = L.geoJson(FinalPartitionPolygon, {
       color: 'black'
     }).addTo(maps_proposed[row]);
 
-    if(maps_combined[row].hasLayer(LnewPolygonProposedCombined)){
+    if (maps_combined[row].hasLayer(LnewPolygonProposedCombined)) {
       maps_combined[row].removeLayer(LnewPolygonProposedCombined);
     }
     LnewPolygonProposedCombined = L.geoJson(FinalPartitionPolygon, {
