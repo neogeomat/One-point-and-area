@@ -107,7 +107,7 @@
       });
     maps_habib[row].fitBounds(polygons_habib[row].getLayers()[selectedPolygon].getBounds());
   })
-  var points = polygonLayer.features[0].geometry.coordinates[0].slice();
+  var points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].slice();
   if(calcPolygonAreaShoelace(points) < 0) {
       points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
     }
@@ -181,7 +181,7 @@
     labelLayer_habib[row] = L.featureGroup().addTo(maps_habib[row]);
 
     var points_habib = (typeof points_habib === 'undefined') ? {} : points_habib;
-    points_habib[row] = polygonLayer.features[0].geometry.coordinates[0].slice();
+    points_habib[row] = polygonLayer.features[selectedPolygon].geometry.coordinates[0].slice();
     points_habib[row].pop();
     if(calcPolygonAreaShoelace(points_habib[row]) < 0) {
       points_habib[row] = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
@@ -269,7 +269,7 @@
     // labelLayer_proposed[row] = L.featureGroup().addTo(maps_proposed[row]);
     // add labels to each vertex of the polygon
     var points_proposed = (typeof points_proposed === 'undefined') ? {} : points_proposed;
-    points_proposed[row] = polygonLayer.features[0].geometry.coordinates[0].slice();
+    points_proposed[row] = polygonLayer.features[selectedPolygon].geometry.coordinates[0].slice();
     if(calcPolygonAreaShoelace(points_proposed[row]) < 0) {
       points_proposed[row].reverse();
     }
@@ -348,7 +348,10 @@
         partitionPolygonTurf
       );
       var areaIntersection = [];
-      // debugger;
+      debugger;
+      if (!intersection) {
+        areaIntersection.push(0);
+      } else
       if (intersection.geometry.coordinates.length <= 1) {
         areaIntersection.push(calcPolygonAreaShoelace(
           intersection.geometry.coordinates[0]
@@ -389,7 +392,7 @@
         LastPartitionPolygon.pop();
         threePointcase = false;
       }
-      // debugger;
+      debugger;
       L.geoJson(LastPartitionPolygonTurf, {style: {color: 'red'}}).addTo(maps_proposed[row]);
       var intersection = turf.intersect(
         polygonLayer.features[selectedPolygon],
