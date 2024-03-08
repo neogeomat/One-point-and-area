@@ -70,6 +70,8 @@
   var polygons_habib = {};
   var polygons_proposed = {};
   var polygons_combined = {};
+  var LnewPolygonHabib; // placeholder for habibs result
+  var LnewPolygonProposed; // placeholder for proposed result
 </script>
 <script>
   var row = 1;
@@ -196,10 +198,18 @@
         ];
         var newPolygon = points_habib[row].slice(0, i - 1);
         newPolygon.push(pNewLatLng);
-        L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
+        
+        if(maps_habib[row].hasLayer(LnewPolygonHabib)){
+          maps_habib[row].removeLayer(LnewPolygonHabib);
+        }
+         LnewPolygonHabib = L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
           color: "red",
         }).addTo(maps_habib[row]);
-        L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
+        // debugger;
+        if(maps_proposed[row].hasLayer(LnewPolygonProposed)){
+          maps_proposed[row].removeLayer(LnewPolygonProposed);
+        }
+        var LnewPolygonProposed = L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
           color: "red",
         }).addTo(maps_combined[row]);
         break;
@@ -403,7 +413,10 @@
     // console.log('NVertex: ', NVertex);
     // console.log('LVertex: ', LVertex);
 
-    var l = L.geoJson(FinalPartitionPolygon, {
+    if(maps_proposed[row].hasLayer(LnewPolygonProposed)){
+      maps_proposed[row].removeLayer(LnewPolygonProposed);
+    }
+    LnewPolygonProposed = L.geoJson(FinalPartitionPolygon, {
       color: 'black'
     }).addTo(maps_proposed[row]);
     L.geoJson(FinalPartitionPolygon, {
