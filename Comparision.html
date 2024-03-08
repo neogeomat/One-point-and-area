@@ -38,10 +38,6 @@
       <div class="col habib">Habib Algorithm</div>
       <div class="col proposed">
         Proposed Algorithm
-        <!-- </div>
-        <div class="col hybrid">
-          Hybrid Algorithm
-        </div> -->
       </div>
       <div class="col combined">
         <span>Select Polygon
@@ -129,8 +125,18 @@
     if (requiredArea > calcPolygonAreaShoelace(points)) {
       alert('Required Area is greater than Polygon Area');
     }
+    var start = performance.now();
     habib(selectedPointIndex, requiredArea);
+    var end = performance.now();
+    var timeTakenHabib = end - start;
+    $habib_info.html('Time Taken: ' + timeTakenHabib.toFixed(2) + ' ms');
+
+    var start = performance.now();
     proposed(selectedPointIndex, requiredArea);
+    var end = performance.now();
+    var timeTakenProposed = end - start;
+    $proposed_info.html('Time Taken: ' + timeTakenProposed.toFixed(2) + ' ms');
+    
     // combined();
   }
 </script>
@@ -145,7 +151,10 @@
     crs: L.CRS.Simple,
     zoomControl: false,
   });
-
+  var $habib_info = $("<div></div>").addClass("info").attr({
+    id: "habibInfo" + row,
+  });
+  $habib11.after($habib_info);
   polygons_habib[row] = L.geoJSON(polygonLayer).addTo(maps_habib[row]);
   maps_habib[row].fitBounds(polygons_habib[row].getLayers()[0].getBounds());
   var labelLayer_habib = (typeof labelLayer_proposed === "undefined") ? {} : labelLayer_habib;
@@ -246,6 +255,10 @@
     crs: L.CRS.Simple,
     zoomControl: false,
   });
+  var $proposed_info = $("<div></div>").addClass("info").attr({
+    id: "proposedInfo" + row,
+  });
+  $proposed11.after($proposed_info);
   polygons_proposed[row] = L.geoJSON(polygonLayer).addTo(maps_proposed[row]);
   maps_proposed[row].fitBounds(polygons_proposed[row].getBounds());
   maps_proposed[row].invalidateSize();
@@ -328,7 +341,7 @@
       partitionPolygon.push(selectedPointProposed);
       // debugger;
       var partitionPolygonTurf = turf.polygon([partitionPolygon]);
-      // L.geoJson(partitionPolygonTurf, { color: 'pink' }).addTo(maps_proposed[row]);
+      L.geoJson(partitionPolygonTurf, { color: 'pink' }).addTo(maps_proposed[row]);
       partitionPolygon.pop();
       var intersection = turf.intersect(
         polygonLayer.features[selectedPolygon],
@@ -376,7 +389,8 @@
         LastPartitionPolygon.pop();
         threePointcase = false;
       }
-      // L.geoJson(LastPartitionPolygonTurf, {style: {color: 'red'}}).addTo(maps_proposed[row]);
+      // debugger;
+      L.geoJson(LastPartitionPolygonTurf, {style: {color: 'red'}}).addTo(maps_proposed[row]);
       var intersection = turf.intersect(
         polygonLayer.features[selectedPolygon],
         LastPartitionPolygonTurf
