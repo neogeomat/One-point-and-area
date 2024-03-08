@@ -26,7 +26,9 @@
   <script src="js/leaflet.js"></script>
   <script src="js/L.Map.Sync.js"></script>
   <script src="js/turf.min.js"></script>
-  <script src="../qgis/polygon.geojson" type="text/javascript"></script>
+  <!-- <script src="../qgis/polygon.geojson" type="text/javascript"></script> -->
+  <!-- <script src="sd_data.geojson"></script> -->
+  <script src="sd_data_rewind.geojson"></script>
   <script src="utils.js"></script>
 </head>
 
@@ -42,6 +44,11 @@
         </div> -->
       </div>
       <div class="col combined">
+        <span>Select Polygon
+          <select id="selectPolygon"></select>
+          <span id="polygonInfo">Polygon Area</span>
+        </span>
+        <p></p>
         <span>Select Point
           <select id="selectPoint"></select>
         </span>
@@ -67,6 +74,35 @@
 <script>
 
   var row = 1;
+  const $selectPolygon = $('#selectPolygon');
+  polygonLayer.features
+    .forEach((polygon, index) => {
+      $selectPolygon.append($('<option></option>').attr('value', index).text(index));
+    });
+  $selectPolygon.change(function(){
+    var selectedPolygon = $(this).val();
+    console.log('selectedPolygon: ', selectedPolygon);
+    // alert(selectedPolygon);
+    points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].slice();
+    // debugger;
+    $('#polygonInfo').text('Polygon Area: ' + calcPolygonAreaShoelace(points));
+    const $selectPoint = $('#selectPoint');
+    // debugger;
+    $selectPoint.empty();
+    // create a layer to hold labels
+  points
+    .forEach((xy, index) => {
+      $selectPoint.append($('<option></option>').attr('value', index).text(index));
+      const label = L.tooltip({
+          direction: "auto",
+        })
+          .setLatLng({ lat: xy[1], lng: xy[0] })
+          .setContent(`<span>${index}</span>`)
+          // .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
+          .addTo(labelLayer_habib[row]);
+    });
+    maps_habib[row].fitBounds(polygons_habib[row].getLayers()[selectedPolygon].getBounds());
+  })
   var points = polygonLayer.features[0].geometry.coordinates[0].slice();
   const $selectPoint = $('#selectPoint');
   points
@@ -99,8 +135,10 @@
   });
 
   polygons_habib[row] = L.geoJSON(polygonLayer).addTo(maps_habib[row]);
-  maps_habib[row].fitBounds(polygons_habib[row].getBounds());
-  maps_habib[row].invalidateSize();
+  maps_habib[row].fitBounds(polygons_habib[row].getLayers()[0].getBounds());
+  var labelLayer_habib = (typeof labelLayer_proposed === "undefined") ? {} : labelLayer_habib;
+    labelLayer_habib[row] = L.featureGroup().addTo(maps_habib[row]);
+  var layerSwitcher_habib = L.control.layers({},{"labels":labelLayer_habib[row]}).addTo(maps_habib[row]);
   function habib(selectedPointIndex, requiredArea) {
     var row = 1;
     console.time('Habib Execution Time');
@@ -111,8 +149,6 @@
 
     var points_habib = (typeof points_habib === 'undefined') ? {} : points_habib;
     points_habib[row] = polygonLayer.features[0].geometry.coordinates[0].slice();
-
-
     // add labels to each vertex of the polygon
     points_habib[row]
       .forEach((xy, index) => {
@@ -181,9 +217,7 @@
   function proposed(selectedPointIndex, requiredArea) {
     var row = 1;
     console.time('Proposed Execution Time');
-    // create a layer to hold labels
-    var labelLayer_proposed = (typeof labelLayer_proposed === "undefined") ? {} : labelLayer_proposed;
-    labelLayer_proposed[row] = L.featureGroup().addTo(maps_proposed[row]);
+    // labelLayer_proposed[row] = L.featureGroup().addTo(maps_proposed[row]);
     // add labels to each vertex of the polygon
     var points_proposed = (typeof points_proposed === 'undefined') ? {} : points_proposed;
     points_proposed[row] = polygonLayer.features[0].geometry.coordinates[0].slice();
@@ -385,6 +419,8 @@
   maps_habib[row].invalidateSize();
   maps_habib[1].sync(maps_proposed[1]);
   maps_proposed[1].sync(maps_habib[1]);
+  maps_habib[1].sync(maps_combined[1]);
+  maps_combined[1].sync(maps_habib[1]);
 </script>
 
 </html>
