@@ -72,6 +72,8 @@
   var polygons_combined = {};
   var LnewPolygonHabib; // placeholder for habibs result
   var LnewPolygonProposed; // placeholder for proposed result
+  var LnewPolygonHabibCombined;
+  var LnewPolygonProposedCombined; 
 </script>
 <script>
   var row = 1;
@@ -206,10 +208,10 @@
           color: "red",
         }).addTo(maps_habib[row]);
         // debugger;
-        if(maps_proposed[row].hasLayer(LnewPolygonProposed)){
-          maps_proposed[row].removeLayer(LnewPolygonProposed);
+        if(maps_combined[row].hasLayer(LnewPolygonHabibCombined)){
+          maps_combined[row].removeLayer(LnewPolygonHabibCombined);
         }
-        var LnewPolygonProposed = L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
+        LnewPolygonHabibCombined = L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
           color: "red",
         }).addTo(maps_combined[row]);
         break;
@@ -419,7 +421,11 @@
     LnewPolygonProposed = L.geoJson(FinalPartitionPolygon, {
       color: 'black'
     }).addTo(maps_proposed[row]);
-    L.geoJson(FinalPartitionPolygon, {
+
+    if(maps_combined[row].hasLayer(LnewPolygonProposedCombined)){
+      maps_combined[row].removeLayer(LnewPolygonProposedCombined);
+    }
+    LnewPolygonProposedCombined = L.geoJson(FinalPartitionPolygon, {
       color: 'black'
     }).addTo(maps_combined[row]);
     console.timeEnd('Proposed Execution Time');
