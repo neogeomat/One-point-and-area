@@ -74,6 +74,7 @@
   var LnewPolygonProposed; // placeholder for proposed result
   var LnewPolygonHabibCombined;
   var LnewPolygonProposedCombined; 
+  var selectedPolygon = 0;
 </script>
 <script>
   var row = 1;
@@ -83,11 +84,14 @@
       $selectPolygon.append($('<option></option>').attr('value', index).text(index));
     });
   $selectPolygon.change(function () {
-    var selectedPolygon = $(this).val();
+    selectedPolygon = $(this).val();
     console.log('selectedPolygon: ', selectedPolygon);
     // alert(selectedPolygon);
     points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].slice();
     // debugger;
+    if(calcPolygonAreaShoelace(points) < 0) {
+      points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
+    }
     $('#polygonInfo').text('Polygon Area: ' + calcPolygonAreaShoelace(points));
     const $selectPoint = $('#selectPoint');
     // debugger;
@@ -107,6 +111,9 @@
     maps_habib[row].fitBounds(polygons_habib[row].getLayers()[selectedPolygon].getBounds());
   })
   var points = polygonLayer.features[0].geometry.coordinates[0].slice();
+  if(calcPolygonAreaShoelace(points) < 0) {
+      points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
+    }
   const $selectPoint = $('#selectPoint');
   points
     .forEach((xy, index) => {
@@ -163,6 +170,9 @@
 
     var points_habib = (typeof points_habib === 'undefined') ? {} : points_habib;
     points_habib[row] = polygonLayer.features[0].geometry.coordinates[0].slice();
+    if(calcPolygonAreaShoelace(points_habib[row]) < 0) {
+      points_habib[row] = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
+    }
     // add labels to each vertex of the polygon
     points_habib[row]
       .forEach((xy, index) => {
@@ -243,6 +253,9 @@
     // add labels to each vertex of the polygon
     var points_proposed = (typeof points_proposed === 'undefined') ? {} : points_proposed;
     points_proposed[row] = polygonLayer.features[0].geometry.coordinates[0].slice();
+    if(calcPolygonAreaShoelace(points_proposed[row]) < 0) {
+      points_proposed[row].reverse();
+    }
     const selectedPointProposed = points_proposed[row][selectedPointIndex];
     const frontPointsProposed = points_proposed[row].splice(0, selectedPointIndex);
     // console.log('frontPointsProposed: ', frontPointsProposed);
@@ -314,7 +327,7 @@
       // L.geoJson(partitionPolygonTurf, { color: 'pink' }).addTo(maps_proposed[row]);
       partitionPolygon.pop();
       var intersection = turf.intersect(
-        polygonLayer.features[0],
+        polygonLayer.features[selectedPolygon],
         partitionPolygonTurf
       );
       var areaIntersection = [];
@@ -361,7 +374,7 @@
       }
       // L.geoJson(LastPartitionPolygonTurf, {style: {color: 'red'}}).addTo(maps_proposed[row]);
       var intersection = turf.intersect(
-        polygonLayer.features[0],
+        polygonLayer.features[selectedPolygon],
         LastPartitionPolygonTurf
       );
 
