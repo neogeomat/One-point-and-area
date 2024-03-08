@@ -88,6 +88,7 @@
     console.log('selectedPolygon: ', selectedPolygon);
     // alert(selectedPolygon);
     points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].slice();
+    points.pop();
     // debugger;
     if(calcPolygonAreaShoelace(points) < 0) {
       points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
@@ -115,6 +116,7 @@
       points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
     }
   const $selectPoint = $('#selectPoint');
+  points.pop();
   points
     .forEach((xy, index) => {
       $selectPoint.append($('<option></option>').attr('value', index).text(index));
@@ -148,6 +150,7 @@
   maps_habib[row].fitBounds(polygons_habib[row].getLayers()[0].getBounds());
   var labelLayer_habib = (typeof labelLayer_proposed === "undefined") ? {} : labelLayer_habib;
   labelLayer_habib[row] = L.featureGroup().addTo(maps_habib[row]);
+  points.pop();
   points
     .forEach((xy, index) => {
       const label = L.tooltip({
@@ -170,6 +173,7 @@
 
     var points_habib = (typeof points_habib === 'undefined') ? {} : points_habib;
     points_habib[row] = polygonLayer.features[0].geometry.coordinates[0].slice();
+    points_habib[row].pop();
     if(calcPolygonAreaShoelace(points_habib[row]) < 0) {
       points_habib[row] = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
     }
