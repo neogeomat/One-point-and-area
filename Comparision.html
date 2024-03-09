@@ -25,6 +25,7 @@
   <script src="js/leaflet.js"></script>
   <script src="js/L.Map.Sync.js"></script>
   <script src="js/turf.min.js"></script>
+  <script src="js/convex-hull.js"></script>
   <!-- <script src="../qgis/polygon.geojson" type="text/javascript"></script> -->
   <script src="sd_data.geojson"></script>
   <!-- <script src="sd_data_rewind.geojson"></script> -->
@@ -292,18 +293,16 @@
     // Proposed One Point and Area Algorithm
     var intAngles = getPolygonAngles(points_proposed[row]);
 
-    let concaveIndex = [];
-    for (let i = 0; i < intAngles.length; i++) {
-      if (intAngles[i] > 180) {
-        concaveIndex.push(i);
-      }
-    }
-    var convexIndex = [];
-    for (let i = 0; i < intAngles.length; i++) {
-      if (intAngles[i] < 180) {
-        convexIndex.push(i);
-      }
-    }
+    var arrayOfObjects = points_proposed[row].map(function(arr) {
+      return { x: arr[0], y: arr[1] };
+    });
+
+    var convex_hull = convexhull.makeHull(arrayOfObjects);
+    
+    convex_hull = convex_hull.map(function(arr) {
+      return [arr.x, arr.y];
+    })
+
     var pointsSlopes = points_proposed[row].map((point, index) => {
       return {
         vertexindex: index,
@@ -334,6 +333,11 @@
       return points_proposed[row][index];
     }
     );
+    
+    
+    
+    console.log(arrayOfObjects);
+    debugger; // for checking convex
     // find last partition polygon
     for (let i = 2; i < rearrangedPointsConvex.length; i++) {
       // debugger
