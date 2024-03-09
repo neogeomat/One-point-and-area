@@ -292,14 +292,27 @@
     //   });
     // Proposed One Point and Area Algorithm
     var intAngles = getPolygonAngles(points_proposed[row]);
-
-    var arrayOfObjects = points_proposed[row].map(function(arr) {
-      return { x: arr[0], y: arr[1] };
+    let concaveIndex = [];
+    for (let i = 0; i < intAngles.length; i++) {
+      if (intAngles[i] > 180) {
+        concaveIndex.push(i);
+      }
+    }
+    var arrayOfObjects = points_proposed[row].map(function (arr, index) {
+      return { x: arr[0], y: arr[1], index: index };
     });
 
     var convex_hull = convexhull.makeHull(arrayOfObjects);
-    
-    convex_hull = convex_hull.map(function(arr) {
+    convex_hull.sort((a, b) => a.index - b.index)
+
+    convexIndex = convex_hull.map(function (arr) {
+      return arr.index;
+    });
+
+    if(convexIndex[0] !== 0){
+      convexIndex.unshift(0);
+    }
+    console.log('convexIndexNew: ', convexIndex);    convex_hull = convex_hull.map(function (arr) {
       return [arr.x, arr.y];
     })
 
@@ -324,7 +337,8 @@
     }
     );
     // debugger
-    var convexIndex = pointsSlopesIndex.filter((element) => !concaveIndex.includes(element) || element == 0);
+    // var convexIndex = pointsSlopesIndex.filter((element) => !concaveIndex.includes(element) || element == 0);
+    console.log('convexIndex: ', convexIndex);
     var rearrangedPoints = pointsSlopesIndex.map((index) => {
       return points_proposed[row][index];
     }
@@ -333,9 +347,7 @@
       return points_proposed[row][index];
     }
     );
-    
-    
-    
+
     console.log(arrayOfObjects);
     debugger; // for checking convex
     // find last partition polygon
