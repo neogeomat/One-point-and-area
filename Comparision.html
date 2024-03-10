@@ -88,15 +88,17 @@
     // alert(selectedPolygon);
     points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].slice();
     points.pop();
-    // debugger;
+    
     if (calcPolygonAreaShoelace(points) < 0) {
       points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
     }
     $('#polygonInfo').text('Polygon Area: ' + calcPolygonAreaShoelace(points));
     const $selectPoint = $('#selectPoint');
-    // debugger;
+    
     $selectPoint.empty();
     // create a layer to hold labels
+    
+    labelLayer_habib[row].clearLayers();
     points.forEach((xy, index) => {
       $selectPoint.append($('<option></option>').attr('value', index).text(index));
       const label = L.tooltip({
@@ -160,9 +162,10 @@
   $habib11.after($habib_info);
   polygons_habib[row] = L.geoJSON(polygonLayer).addTo(maps_habib[row]);
   maps_habib[row].fitBounds(polygons_habib[row].getLayers()[0].getBounds());
-  var labelLayer_habib = (typeof labelLayer_proposed === "undefined") ? {} : labelLayer_habib;
+  var labelLayer_habib = (typeof labelLayer_habib === "undefined") ? {} : labelLayer_habib;
   labelLayer_habib[row] = L.featureGroup().addTo(maps_habib[row]);
   points.pop();
+  labelLayer_habib[row].clearLayers();
   points.forEach((xy, index) => {
     const label = L.tooltip({
       direction: "auto",
@@ -182,10 +185,10 @@
   function habib(selectedPointIndex, requiredArea) {
     var row = 1;
     console.time('Habib Execution Time');
-
     // create a layer to hold labels
     var labelLayer_habib = (typeof labelLayer_habib === "undefined") ? {} : labelLayer_habib;
-    labelLayer_habib[row] = L.featureGroup().addTo(maps_habib[row]);
+    labelLayer_habib[row] = L.featureGroup();
+    // labelLayer_habib[row].addTo(maps_habib[row]);
 
     var points_habib = (typeof points_habib === 'undefined') ? {} : points_habib;
     points_habib[row] = polygonLayer.features[selectedPolygon].geometry.coordinates[0].slice();
@@ -194,6 +197,8 @@
       points_habib[row] = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
     }
     // add labels to each vertex of the polygon
+
+    labelLayer_habib[row].clearLayers();
     points_habib[row].forEach((xy, index) => {
       // console.log('xy: ', xy);
       const label = L.tooltip({
@@ -231,7 +236,7 @@
         LnewPolygonHabib = L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
           color: "red",
         }).addTo(maps_habib[row]);
-        // debugger;
+        
         if (maps_combined[row].hasLayer(LnewPolygonHabibCombined)) {
           maps_combined[row].removeLayer(LnewPolygonHabibCombined);
         }
@@ -323,7 +328,7 @@
       };
     }
     );
-    // debugger;
+    
     var baseLineForAngleIndex = concaveIndex.includes(1) ? convexIndex[1] : 1;
     var pointAngles = pointsSlopes.map((point) => point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis >= 0 ? point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis : point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis + 360);
     pointAngles[0] = 0;
@@ -349,15 +354,15 @@
     );
 
     console.log(arrayOfObjects);
-    debugger; // for checking convex
+     // for checking convex
     // find last partition polygon
     for (let i = 2; i < rearrangedPointsConvex.length; i++) {
       // debugger
       var partitionPolygon = rearrangedPointsConvex.slice(0, i + 1);
       // slice returns i-1 so parameter is i+1
-      // debugger;
+      
       partitionPolygon.push(selectedPointProposed);
-      // debugger;
+      
       var partitionPolygonTurf = turf.polygon([partitionPolygon]);
       // L.geoJson(partitionPolygonTurf, {
       //   color: 'pink'
@@ -365,7 +370,7 @@
       partitionPolygon.pop();
       var intersection = turf.intersect(polygonLayer.features[selectedPolygon], partitionPolygonTurf);
       var areaIntersection = [];
-      // debugger;
+      
       if (!intersection) {
         areaIntersection.push(0);
       } else if (intersection.geometry.coordinates.length <= 1) {
@@ -379,7 +384,7 @@
 
       // stop when interior area gets larger than required area
       if (interiorarea - requiredArea >= 0.01) {
-        debugger;
+        
         var LVertex = rearrangedPointsConvex[i - 1];
         var NVertex = points_proposed[row][convexIndex[i - 1] + 1];
         break;
@@ -388,7 +393,7 @@
     // console.log('%c partitionPoly' + partitionPolygon, 'background: #FFF; color:red ')
 
     function derivePartitionPoly(rearrangedPointsConvex, partitionPolygon, LVertex, NVertex, requiredArea) {
-      // debugger;
+      
       const LastPartitionPolygon = partitionPolygon;
       LastPartitionPolygon.push(selectedPointProposed);
       if (LastPartitionPolygon.length <= 3) {
@@ -401,7 +406,7 @@
         LastPartitionPolygon.pop();
         threePointcase = false;
       }
-      // debugger;
+      
       // L.geoJson(LastPartitionPolygonTurf, {
       //   style: {
       //     color: 'red'
@@ -410,7 +415,7 @@
       var intersection = turf.intersect(polygonLayer.features[selectedPolygon], LastPartitionPolygonTurf);
 
       var areaIntersection = [];
-      // debugger;
+      
       if (!intersection) {
         areaIntersection.push(0);
       } else if (intersection.geometry.coordinates.length <= 1) {
@@ -425,7 +430,7 @@
 
       const areaDiff = requiredArea - interiorarea;
 
-      // debugger;
+      
       if (areaDiff <= 1) {
         //tolerance level
         return intersection
