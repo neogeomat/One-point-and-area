@@ -54,6 +54,8 @@
         <input type="text" id="requiredArea">
         <p></p>
         <button onclick="performSplit()">Perform Split</button>
+        <p></p>
+        <span>Combined Results</span>
       </div>
     </div>
 </body>
@@ -429,8 +431,6 @@
       // L.geoJson(intersection, { color: "green" }).addTo(maps_proposed[row]);
 
       const areaDiff = requiredArea - interiorarea;
-
-      
       if (areaDiff <= 1) {
         //tolerance level
         return intersection
