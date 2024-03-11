@@ -89,7 +89,7 @@
     console.log('selectedPolygon: ', selectedPolygon);
     // alert(selectedPolygon);
     points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].slice();
-    points.pop();
+    // points.pop();
     
     if (calcPolygonAreaShoelace(points) < 0) {
       points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
@@ -119,7 +119,7 @@
     points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
   }
   const $selectPoint = $('#selectPoint');
-  points.pop();
+  // points.pop();
   points.forEach((xy, index) => {
     $selectPoint.append($('<option></option>').attr('value', index).text(index));
   }
@@ -166,7 +166,7 @@
   maps_habib[row].fitBounds(polygons_habib[row].getLayers()[0].getBounds());
   var labelLayer_habib = (typeof labelLayer_habib === "undefined") ? {} : labelLayer_habib;
   labelLayer_habib[row] = L.featureGroup().addTo(maps_habib[row]);
-  points.pop();
+  // points.pop();
   labelLayer_habib[row].clearLayers();
   points.forEach((xy, index) => {
     const label = L.tooltip({
