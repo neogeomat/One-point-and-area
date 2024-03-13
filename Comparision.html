@@ -298,13 +298,6 @@
     //     // Apply styling to label if needed
     //   });
     // Proposed One Point and Area Algorithm
-    var intAngles = getPolygonAngles(points_proposed[row]);
-    let concaveIndex = [];
-    for (let i = 0; i < intAngles.length; i++) {
-      if (intAngles[i] > 180) {
-        concaveIndex.push(i);
-      }
-    }
     var arrayOfObjects = points_proposed[row].map(function (arr, index) {
       return { x: arr[0], y: arr[1], index: index };
     });
@@ -319,43 +312,17 @@
     if(convexIndex[0] !== 0){
       convexIndex.unshift(0);
     }
-    console.log('convexIndexNew: ', convexIndex);    convex_hull = convex_hull.map(function (arr) {
+    console.log('convexIndexNew: ', convexIndex);    
+    convex_hull = convex_hull.map(function (arr) {
       return [arr.x, arr.y];
-    })
-
-    var pointsSlopes = points_proposed[row].map((point, index) => {
-      return {
-        vertexindex: index,
-        angleXaxis: angleWithXAxis(points_proposed[row][0], point),
-      };
-    }
-    );
+    });
     
-    var baseLineForAngleIndex = concaveIndex.includes(1) ? convexIndex[1] : 1;
-    var pointAngles = pointsSlopes.map((point) => point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis >= 0 ? point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis : point.angleXaxis - pointsSlopes[baseLineForAngleIndex].angleXaxis + 360);
-    pointAngles[0] = 0;
-    pointsSlopes.forEach((item, i) => {
-      pointsSlopes[i].angle = pointAngles[i];
-    }
-    );
-    pointsSlopes.sort((a, b) => a.angle - b.angle);
-    var pointsSlopesIndex = pointsSlopes.map((point, index) => {
-      return point.vertexindex;
-    }
-    );
-    // debugger
-    // var convexIndex = pointsSlopesIndex.filter((element) => !concaveIndex.includes(element) || element == 0);
-    console.log('convexIndex: ', convexIndex);
-    var rearrangedPoints = pointsSlopesIndex.map((index) => {
-      return points_proposed[row][index];
-    }
-    );
     var rearrangedPointsConvex = convexIndex.map((index) => {
       return points_proposed[row][index];
     }
     );
 
-    console.log(arrayOfObjects);
+    // console.log(rearrangedPointsConvex);
      // for checking convex
     // find last partition polygon
     for (let i = 2; i < rearrangedPointsConvex.length; i++) {
@@ -388,7 +355,8 @@
       if (interiorarea - requiredArea >= 0.01) {
         
         var LVertex = rearrangedPointsConvex[i - 1];
-        var NVertex = points_proposed[row][convexIndex[i - 1] + 1];
+        // var NVertex = points_proposed[row][convexIndex[i - 1] + 1];
+        var NVertex = rearrangedPointsConvex[i];
         break;
       }
     }
@@ -411,7 +379,7 @@
       
       // L.geoJson(LastPartitionPolygonTurf, {
       //   style: {
-      //     color: 'red'
+      //     color: 'orange'
       //   }
       // }).addTo(maps_proposed[row]);
       var intersection = turf.intersect(polygonLayer.features[selectedPolygon], LastPartitionPolygonTurf);
