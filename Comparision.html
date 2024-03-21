@@ -131,18 +131,9 @@
     if (requiredArea > calcPolygonAreaShoelace(points)) {
       alert('Required Area is greater than Polygon Area');
     }
-    var start = performance.now();
+    
     habib(selectedPointIndex, requiredArea);
-    var end = performance.now();
-    var timeTakenHabib = end - start;
-    $habib_info.html('Time Taken: ' + timeTakenHabib.toFixed(2) + ' ms');
-
-    var start = performance.now();
     proposed(selectedPointIndex, requiredArea);
-    var end = performance.now();
-    var timeTakenProposed = end - start;
-    $proposed_info.html('Time Taken: ' + timeTakenProposed.toFixed(2) + ' ms');
-
     // combined();
   }
 </script>
@@ -185,6 +176,7 @@
   }).addTo(maps_habib[row]);
   function habib(selectedPointIndex, requiredArea) {
     var row = 1;
+    var start = performance.now();
     console.time('Habib Execution Time');
     // create a layer to hold labels
     var labelLayer_habib = (typeof labelLayer_habib === "undefined") ? {} : labelLayer_habib;
@@ -226,11 +218,11 @@
         const LVertex = points_habib[row][i - 2];
         const NVertex = points_habib[row][i - 1];
         const areaDiff = requiredArea - calcPolygonAreaShoelace(points_habib[row].slice(0, i - 1));
-        const pDist = (2 * areaDiff) / (distance(LVertex, selectedPoint) * Math.sin(anticlockwiseAngle2D(NVertex, LVertex, selectedPoint) * Math.PI / 180));
+        const pDist = (2 * areaDiff) / (distance(LVertex, selectedPoint) * Math.sin(anticlockwiseAngle2D(selectedPoint, LVertex,NVertex ) * Math.PI / 180));
         const pNewLatLng = [LVertex[0] + ((NVertex[0] - LVertex[0]) * pDist) / distance(NVertex, LVertex), LVertex[1] + ((NVertex[1] - LVertex[1]) * pDist) / distance(NVertex, LVertex),];
         var newPolygon = points_habib[row].slice(0, i - 1);
         newPolygon.push(pNewLatLng);
-
+        var end = performance.now();
         if (maps_habib[row].hasLayer(LnewPolygonHabib)) {
           maps_habib[row].removeLayer(LnewPolygonHabib);
         }
@@ -244,11 +236,20 @@
         LnewPolygonHabibCombined = L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
           color: "red",
         }).addTo(maps_combined[row]);
+
+        var timeTakenHabib = end - start;
+    $habib_info.html('Time Taken: ' + timeTakenHabib.toFixed(2) + ' ms');
+    // debugger;
+    $habib_info.html($habib_info.html() + '<br>' + newPolygon[1]+ selectedPoint+ pNewLatLng) + ' points';
+    $habib_info.html($habib_info.html() + '<br>Angle: ' + anticlockwiseAngle2D(newPolygon[1], selectedPoint, pNewLatLng) + ' degrees');
+    $habib_info.html($habib_info.html() + '<br><br>newPolygon: ' + JSON.stringify(LnewPolygonHabib.toGeoJSON()));
         break;
       }
       //
     }
     console.timeEnd('Habib Execution Time');
+    // debugger;
+    return newPolygon;
   }
 </script>
 <script algo="proposed">
@@ -272,6 +273,7 @@
 
   function proposed(selectedPointIndex, requiredArea) {
     var row = 1;
+    var start = performance.now();
     console.time('Proposed Execution Time');
     // labelLayer_proposed[row] = L.featureGroup().addTo(maps_proposed[row]);
     // add labels to each vertex of the polygon
@@ -284,18 +286,6 @@
     const frontPointsProposed = points_proposed[row].splice(0, selectedPointIndex);
     // console.log('frontPointsProposed: ', frontPointsProposed);
     points_proposed[row] = [...points_proposed[row], ...frontPointsProposed];
-    // add labels to each vertex of the polygon
-    // points_proposed[row]
-    //   .forEach((xy, index) => {
-    //     const label = L.tooltip({
-    //       direction: "auto",
-    //     })
-    //       .setLatLng({ lat: xy[1], lng: xy[0] })
-    //       .setContent(`<span>${index}</span>`)
-    //       // .setContent(`<span>${numberToCapitalLetter(index + 1)}</span>`)
-    //       .addTo(labelLayer_proposed[row]);
-    //     // Apply styling to label if needed
-    //   });
     // Proposed One Point and Area Algorithm
     var arrayOfObjects = points_proposed[row].map(function (arr, index) {
       return { x: arr[0], y: arr[1], index: index };
@@ -402,7 +392,7 @@
         //tolerance level
         return intersection
       } else {
-        const pDist = (2 * areaDiff) / (distance(LVertex, selectedPointProposed) * Math.sin(anticlockwiseAngle2D(NVertex, LVertex, selectedPointProposed) * Math.PI / 180));
+        const pDist = (2 * areaDiff) / (distance(LVertex, selectedPointProposed) * Math.sin(anticlockwiseAngle2D(selectedPointProposed, LVertex,NVertex ) * Math.PI / 180));
 
         const pNewLatLng = [LVertex[0] + ((NVertex[0] - LVertex[0]) * pDist) / distance(NVertex, LVertex), LVertex[1] + ((NVertex[1] - LVertex[1]) * pDist) / distance(NVertex, LVertex),];
 
@@ -418,7 +408,7 @@
     const FinalPartitionPolygon = derivePartitionPoly(rearrangedPointsConvex, partitionPolygon.slice(0, -1), LVertex, NVertex, requiredArea);
     // console.log('NVertex: ', NVertex);
     // console.log('LVertex: ', LVertex);
-
+    var end = performance.now();
     if (maps_proposed[row].hasLayer(LnewPolygonProposed)) {
       maps_proposed[row].removeLayer(LnewPolygonProposed);
     }
@@ -433,6 +423,8 @@
       color: 'black'
     }).addTo(maps_combined[row]);
     console.timeEnd('Proposed Execution Time');
+    var timeTakenProposed = end - start;
+    $proposed_info.html('Time Taken: ' + timeTakenProposed.toFixed(2) + ' ms');
   }
 </script>
 <script>

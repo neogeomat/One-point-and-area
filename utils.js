@@ -1,8 +1,8 @@
 function anticlockwiseAngle2D(A, B, C) {
   // Calculate vectors AB and BC
   const AB = {
-    x: B[0] - A[0],
-    y: B[1] - A[1],
+    x: A[0] - B[0],
+    y: A[1] - B[1],
   };
   const BC = {
     x: C[0] - B[0],
