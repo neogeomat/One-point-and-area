@@ -1,6 +1,6 @@
 function anticlockwiseAngle2D(A, B, C) {
   // Calculate vectors AB and BC
-  const AB = {
+  const BA = {
     x: A[0] - B[0],
     y: A[1] - B[1],
   };
@@ -10,7 +10,7 @@ function anticlockwiseAngle2D(A, B, C) {
   };
 
   // Use atan2 to get angle between vectors
-  const angle = Math.atan2(AB.y * BC.x - AB.x * BC.y, AB.x * BC.x + AB.y * BC.y);
+  const angle = Math.atan2(BA.y * BC.x - BA.x * BC.y, BA.x * BC.x + BA.y * BC.y);
 
   // Convert to degrees and adjust range to 0-360 (anticlockwise)
   const degrees = (angle * 180) / Math.PI;
