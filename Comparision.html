@@ -426,12 +426,22 @@
     var timeTakenProposed = end - start;
     $proposed_info.html('Time Taken: ' + timeTakenProposed.toFixed(2) + ' ms');
     debugger;
-    var LP = FinalPartitionPolygon.geometry.coordinates.length ==1?FinalPartitionPolygon.geometry.coordinates:FinalPartitionPolygon.geometry.coordinates[0];
+    if(FinalPartitionPolygon.geometry.coordinates.length ==1){
+      var LP = FinalPartitionPolygon.geometry.coordinates;
+    }else{
+      var LP = FinalPartitionPolygon.geometry.coordinates[0];
+      if(LP[0].some(xy => xy.toString() === selectedPointProposed.toString())){
+        
+      }
+      else{
+        var LP = FinalPartitionPolygon.geometry.coordinates[1];
+      }
+    }
     while(selectedPointProposed.toString() !== LP[0][0].toString()){
       LP[0].push(LP[0].shift());
     }
     // $proposed_info.html($proposed_info.html() + '<br>' + rearrangedPointsConvex[1] + '-'+selectedPointProposed + '-' + LP[0][LP[0].length-2]+' points');
-    $proposed_info.html($proposed_info.html() + '<br>Angle: ' + anticlockwiseAngle2D(LP[0][LP[0].length-2],selectedPointProposed,rearrangedPointsConvex[1]) );
+    $proposed_info.html($proposed_info.html() + '<br>Angle: ' + anticlockwiseAngle2D(LP[0][LP[0].length-2],selectedPointProposed,rearrangedPointsConvex[1]) + ' degrees');
   }
 </script>
 <script>
