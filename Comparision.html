@@ -240,8 +240,7 @@
         var timeTakenHabib = end - start;
     $habib_info.html('Time Taken: ' + timeTakenHabib.toFixed(2) + ' ms');
     // debugger;
-    $habib_info.html($habib_info.html() + '<br>' + newPolygon[1]+'-'+ selectedPoint+ '-'+pNewLatLng) + ' points';
-    // $habib_info.html($habib_info.html() + '<br>Angle: ' + anticlockwiseAngle2D(newPolygon[1], selectedPoint, pNewLatLng) + ' degrees');
+    // $habib_info.html($habib_info.html() + '<br>' + newPolygon[1]+'-'+ selectedPoint+ '-'+pNewLatLng) + ' points';
     $habib_info.html($habib_info.html() + '<br>Angle: ' + anticlockwiseAngle2D(pNewLatLng, selectedPoint,newPolygon[1] ) + ' degrees');
     $habib_info.html($habib_info.html() + '<br><br>newPolygon: ' + JSON.stringify(LnewPolygonHabib.toGeoJSON()));
         break;
@@ -426,9 +425,12 @@
     console.timeEnd('Proposed Execution Time');
     var timeTakenProposed = end - start;
     $proposed_info.html('Time Taken: ' + timeTakenProposed.toFixed(2) + ' ms');
-    // debugger;
+    debugger;
     var LP = FinalPartitionPolygon.geometry.coordinates.length ==1?FinalPartitionPolygon.geometry.coordinates:FinalPartitionPolygon.geometry.coordinates[0];
-    $proposed_info.html($proposed_info.html() + '<br>' + rearrangedPointsConvex[1] + '-'+selectedPointProposed + '-' + LP[0][LP[0].length-2]+' points');
+    while(selectedPointProposed.toString() !== LP[0][0].toString()){
+      LP[0].push(LP[0].shift());
+    }
+    // $proposed_info.html($proposed_info.html() + '<br>' + rearrangedPointsConvex[1] + '-'+selectedPointProposed + '-' + LP[0][LP[0].length-2]+' points');
     $proposed_info.html($proposed_info.html() + '<br>Angle: ' + anticlockwiseAngle2D(LP[0][LP[0].length-2],selectedPointProposed,rearrangedPointsConvex[1]) );
   }
 </script>
