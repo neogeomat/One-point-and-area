@@ -89,16 +89,16 @@
     // alert(selectedPolygon);
     points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].slice();
     // points.pop();
-    
+
     if (calcPolygonAreaShoelace(points) < 0) {
       points = polygonLayer.features[selectedPolygon].geometry.coordinates[0].reverse().slice();
     }
     $('#polygonInfo').text('Polygon Area: ' + calcPolygonAreaShoelace(points));
     const $selectPoint = $('#selectPoint');
-    
+
     $selectPoint.empty();
     // create a layer to hold labels
-    
+
     labelLayer_habib[row].clearLayers();
     points.forEach((xy, index) => {
       $selectPoint.append($('<option></option>').attr('value', index).text(index));
@@ -131,7 +131,7 @@
     if (requiredArea > calcPolygonAreaShoelace(points)) {
       alert('Required Area is greater than Polygon Area');
     }
-    
+
     habib(selectedPointIndex, requiredArea);
     proposed(selectedPointIndex, requiredArea);
     // combined();
@@ -218,7 +218,7 @@
         const LVertex = points_habib[row][i - 2];
         const NVertex = points_habib[row][i - 1];
         const areaDiff = requiredArea - calcPolygonAreaShoelace(points_habib[row].slice(0, i - 1));
-        const pDist = (2 * areaDiff) / (distance(LVertex, selectedPoint) * Math.sin(anticlockwiseAngle2D(selectedPoint, LVertex,NVertex ) * Math.PI / 180));
+        const pDist = (2 * areaDiff) / (distance(LVertex, selectedPoint) * Math.sin(anticlockwiseAngle2D(selectedPoint, LVertex, NVertex) * Math.PI / 180));
         const pNewLatLng = [LVertex[0] + ((NVertex[0] - LVertex[0]) * pDist) / distance(NVertex, LVertex), LVertex[1] + ((NVertex[1] - LVertex[1]) * pDist) / distance(NVertex, LVertex),];
         var newPolygon = points_habib[row].slice(0, i - 1);
         newPolygon.push(pNewLatLng);
@@ -228,26 +228,47 @@
         }
         LnewPolygonHabib = L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
           color: "red",
+          dashArray: "10 10",
         }).addTo(maps_habib[row]);
-        
+
         if (maps_combined[row].hasLayer(LnewPolygonHabibCombined)) {
           maps_combined[row].removeLayer(LnewPolygonHabibCombined);
         }
         LnewPolygonHabibCombined = L.polygon(L.GeoJSON.coordsToLatLngs(newPolygon), {
           color: "red",
+          dashArray: "5 10",
         }).addTo(maps_combined[row]);
 
         var timeTakenHabib = end - start;
-    $habib_info.html('Time Taken: ' + timeTakenHabib.toFixed(2) + ' ms');
-    // debugger;
-    // $habib_info.html($habib_info.html() + '<br>' + newPolygon[1]+'-'+ selectedPoint+ '-'+pNewLatLng) + ' points';
-    $habib_info.html($habib_info.html() + '<br>Angle: ' + anticlockwiseAngle2D(pNewLatLng, selectedPoint,newPolygon[1] ) + ' degrees');
-    $habib_info.html($habib_info.html() + '<br><br>newPolygon: ' + JSON.stringify(LnewPolygonHabib.toGeoJSON()));
+        $habib_info.html('Time Taken: ' + timeTakenHabib.toFixed(2) + ' ms');
+
+        console.timeEnd('Habib Execution Time');
+        // debugger;
+        // $habib_info.html($habib_info.html() + '<br>' + newPolygon[1]+'-'+ selectedPoint+ '-'+pNewLatLng) + ' points';
+        $habib_info.html($habib_info.html() + '<br>Angle: ' + anticlockwiseAngle2D(pNewLatLng, selectedPoint, newPolygon[1]) + ' degrees');
+        // $habib_info.html($habib_info.html() + '<br>concavity: ' + calcPolygonAreaShoelace(newPolygon));
+        // debugger;
+        var newPolygonXY = newPolygon.map(function (arr, index) {
+          return { x: arr[0], y: arr[1], index: index };
+        });
+        var convex_hull_newPolygonXY = convexhull.makeHull(newPolygonXY);
+        convex_hull_newPolygon = convex_hull_newPolygonXY.map(xy => [xy.x, xy.y]);
+
+        $habib_info.html($habib_info.html() + '<br>concavity: ' + calcPolygonAreaShoelace(newPolygon) / Math.abs(calcPolygonAreaShoelace(convex_hull_newPolygon)));
+
+        LnewPolygonHabibCombined['feature'] = {};
+        LnewPolygonHabibCombined['feature']['type'] = 'Feature';
+        LnewPolygonHabibCombined['feature']['properties'] = {};
+        LnewPolygonHabibCombined['feature']['properties']['polygon'] = $selectPolygon.val();
+        LnewPolygonHabibCombined['feature']['properties']['point'] = $selectPoint.val();
+        LnewPolygonHabibCombined['feature']['properties']['requiredarea'] = requiredArea;
+        LnewPolygonHabibCombined['feature']['properties']['algo'] = 'habib';
+        LnewPolygonHabibCombined['feature']['properties']['multi'] = 1;
+        $habib_info.html($habib_info.html() + '<br><br>newPolygon: <br>' + JSON.stringify(LnewPolygonHabibCombined.toGeoJSON()));
         break;
       }
       //
     }
-    console.timeEnd('Habib Execution Time');
     // debugger;
     return newPolygon;
   }
@@ -298,29 +319,29 @@
       return arr.index;
     });
 
-    if(convexIndex[0] !== 0){
+    if (convexIndex[0] !== 0) {
       convexIndex.unshift(0);
     }
-    console.log('convexIndexNew: ', convexIndex);    
+    console.log('convexIndexNew: ', convexIndex);
     convex_hull = convex_hull.map(function (arr) {
       return [arr.x, arr.y];
     });
-    
+
     var rearrangedPointsConvex = convexIndex.map((index) => {
       return points_proposed[row][index];
     }
     );
 
     // console.log(rearrangedPointsConvex);
-     // for checking convex
+    // for checking convex
     // find last partition polygon
     for (let i = 2; i < rearrangedPointsConvex.length; i++) {
       // debugger
       var partitionPolygon = rearrangedPointsConvex.slice(0, i + 1);
       // slice returns i-1 so parameter is i+1
-      
+
       partitionPolygon.push(selectedPointProposed);
-      
+
       var partitionPolygonTurf = turf.polygon([partitionPolygon]);
       // L.geoJson(partitionPolygonTurf, {
       //   color: 'pink'
@@ -328,7 +349,7 @@
       partitionPolygon.pop();
       var intersection = turf.intersect(polygonLayer.features[selectedPolygon], partitionPolygonTurf);
       var areaIntersection = [];
-      
+
       if (!intersection) {
         areaIntersection.push(0);
       } else if (intersection.geometry.coordinates.length <= 1) {
@@ -342,7 +363,7 @@
 
       // stop when interior area gets larger than required area
       if (interiorarea - requiredArea >= 0.01) {
-        
+
         var LVertex = rearrangedPointsConvex[i - 1];
         // var NVertex = points_proposed[row][convexIndex[i - 1] + 1];
         var NVertex = rearrangedPointsConvex[i];
@@ -352,7 +373,7 @@
     // console.log('%c partitionPoly' + partitionPolygon, 'background: #FFF; color:red ')
 
     function derivePartitionPoly(rearrangedPointsConvex, partitionPolygon, LVertex, NVertex, requiredArea) {
-      
+
       const LastPartitionPolygon = partitionPolygon;
       LastPartitionPolygon.push(selectedPointProposed);
       if (LastPartitionPolygon.length <= 3) {
@@ -365,7 +386,7 @@
         LastPartitionPolygon.pop();
         threePointcase = false;
       }
-      
+
       // L.geoJson(LastPartitionPolygonTurf, {
       //   style: {
       //     color: 'orange'
@@ -374,7 +395,7 @@
       var intersection = turf.intersect(polygonLayer.features[selectedPolygon], LastPartitionPolygonTurf);
 
       var areaIntersection = [];
-      
+
       if (!intersection) {
         areaIntersection.push(0);
       } else if (intersection.geometry.coordinates.length <= 1) {
@@ -392,7 +413,7 @@
         //tolerance level
         return intersection
       } else {
-        const pDist = (2 * areaDiff) / (distance(LVertex, selectedPointProposed) * Math.sin(anticlockwiseAngle2D(selectedPointProposed, LVertex,NVertex ) * Math.PI / 180));
+        const pDist = (2 * areaDiff) / (distance(LVertex, selectedPointProposed) * Math.sin(anticlockwiseAngle2D(selectedPointProposed, LVertex, NVertex) * Math.PI / 180));
 
         const pNewLatLng = [LVertex[0] + ((NVertex[0] - LVertex[0]) * pDist) / distance(NVertex, LVertex), LVertex[1] + ((NVertex[1] - LVertex[1]) * pDist) / distance(NVertex, LVertex),];
 
@@ -400,11 +421,13 @@
         // L.polygon(L.GeoJSON.coordsToLatLngs(LastPartitionPolygon), {
         //   color: "red",
         // }).addTo(maps_proposed[row]);
+        iter++;
         const FinalPartitionPolygon = derivePartitionPoly(rearrangedPointsConvex, LastPartitionPolygon, pNewLatLng, NVertex, requiredArea);
         // 
         return FinalPartitionPolygon;
       }
     }
+    var iter = 0;
     const FinalPartitionPolygon = derivePartitionPoly(rearrangedPointsConvex, partitionPolygon.slice(0, -1), LVertex, NVertex, requiredArea);
     // console.log('NVertex: ', NVertex);
     // console.log('LVertex: ', LVertex);
@@ -425,23 +448,30 @@
     console.timeEnd('Proposed Execution Time');
     var timeTakenProposed = end - start;
     $proposed_info.html('Time Taken: ' + timeTakenProposed.toFixed(2) + ' ms');
-    debugger;
-    if(FinalPartitionPolygon.geometry.coordinates.length ==1){
+    // debugger;
+    if (FinalPartitionPolygon.geometry.coordinates.length == 1) {
       var LP = FinalPartitionPolygon.geometry.coordinates;
-    }else{
+    } else {
       var LP = FinalPartitionPolygon.geometry.coordinates[0];
-      if(LP[0].some(xy => xy.toString() === selectedPointProposed.toString())){
-        
+      if (LP[0].some(xy => xy.toString() === selectedPointProposed.toString())) {
+
       }
-      else{
+      else {
         var LP = FinalPartitionPolygon.geometry.coordinates[1];
       }
     }
-    while(selectedPointProposed.toString() !== LP[0][0].toString()){
+    while (selectedPointProposed.toString() !== LP[0][0].toString()) {
       LP[0].push(LP[0].shift());
     }
     // $proposed_info.html($proposed_info.html() + '<br>' + rearrangedPointsConvex[1] + '-'+selectedPointProposed + '-' + LP[0][LP[0].length-2]+' points');
-    $proposed_info.html($proposed_info.html() + '<br>Angle: ' + anticlockwiseAngle2D(LP[0][LP[0].length-2],selectedPointProposed,rearrangedPointsConvex[1]) + ' degrees');
+    $proposed_info.html($proposed_info.html() + '<br>iteration: ' + iter);
+    $proposed_info.html($proposed_info.html() + '<br>Angle: ' + anticlockwiseAngle2D(LP[0][LP[0].length - 2], selectedPointProposed, rearrangedPointsConvex[1]) + ' degrees');
+    FinalPartitionPolygon['properties']['polygon'] = $selectPolygon.val();
+    FinalPartitionPolygon['properties']['point'] = $selectPoint.val();
+    FinalPartitionPolygon['properties']['requiredarea'] = requiredArea;
+    FinalPartitionPolygon['properties']['algo'] = 'proposed';
+    FinalPartitionPolygon['properties']['multi'] = FinalPartitionPolygon.geometry.coordinates.length;
+    $proposed_info.html($proposed_info.html() + '<br><br>newPolygon: <br> ' + JSON.stringify(FinalPartitionPolygon));
   }
 </script>
 <script>
